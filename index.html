@@ -4,7 +4,191 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Volcano Parts - Drag & Drop</title>
-  <link rel="stylesheet" href="style.css" />
+  <style>
+    :root {
+  --accent:#2b9348;
+  --danger:#d94f4f;
+  --bg:#f7f7f8;
+  --card:#fff;
+}
+
+* {
+  box-sizing:border-box;
+  font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial;
+}
+
+body {
+  margin:0;
+  background:var(--bg);
+  color:#222;
+}
+
+header {
+  padding:16px;
+  text-align:center;
+  background:#fff;
+  box-shadow:0 1px 3px rgba(0,0,0,.06);
+}
+
+.container {
+  display:flex;
+  gap:16px;
+  padding:20px;
+  max-width:1100px;
+  margin:24px auto;
+}
+
+.left-panel {
+  width:280px;
+  background:var(--card);
+  padding:16px;
+  border-radius:8px;
+  box-shadow:0 2px 6px rgba(0,0,0,.06);
+}
+
+.right-panel {
+  flex:1;
+  background:var(--card);
+  padding:16px;
+  border-radius:8px;
+  box-shadow:0 2px 6px rgba(0,0,0,.06);
+}
+
+#labels {
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+  margin-top:8px;
+}
+
+.label {
+  padding:10px 12px;
+  border-radius:8px;
+  background:#f0f0f0;
+  border:1px solid #e0e0e0;
+  cursor:grab;
+  display:flex;
+  align-items:center;
+  gap:8px;
+}
+
+.label img.icon {
+  width:22px;
+  height:22px;
+  pointer-events:none;
+}
+
+.label:active {
+  cursor:grabbing;
+}
+
+.hide-while-drag {
+  opacity:0;
+}
+
+
+.right-panel {
+  flex: 1;
+  background: var(--card);
+  padding: 16px;
+  border-radius: 8px;
+  box-shadow: 0 2px 6px rgba(0,0,0,.06);
+
+  /* CENTER CONTENT */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Volcano container */
+.volcano-wrap {
+  position: relative;
+  width: 520px;
+  height: 520px;
+
+  /* CENTER INSIDE RIGHT PANEL */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+
+/* Volcano image (no fading) */
+.volcano-img {
+  width:520px;
+  height:520px;
+  object-fit:contain;
+  transition:none !important;
+}
+
+/* Explosion GIF */
+.explosion-img {
+  position:absolute;
+  top:0;
+  left:0;
+  width:520px;
+  height:520px;
+  object-fit:contain;
+  opacity:0;
+  pointer-events:none;
+}
+
+
+/****** DROP TARGETS ******/
+.drop-target {
+  position:absolute;
+  min-width:120px;
+  padding:6px 8px;
+  background:rgba(255,255,255,0.85);
+  border:2px dashed rgba(0,0,0,0.12);
+  border-radius:8px;
+  text-align:center;
+  font-size:13px;
+  transform:translate(-50%,-50%);
+  transition:.18s ease;
+}
+
+.drop-target.correct {
+  border-color:var(--accent);
+  background:#eafaea;
+  color:var(--accent);
+}
+
+.drop-target.wrong {
+  border-color:var(--danger);
+  animation: shake .45s;
+}
+
+@keyframes shake {
+  0%{transform:translate(-50%,-50%) translateX(0)}
+  20%{transform:translate(-50%,-50%) translateX(-8px)}
+  40%{transform:translate(-50%,-50%) translateX(8px)}
+  60%{transform:translate(-50%,-50%) translateX(-6px)}
+  80%{transform:translate(-50%,-50%) translateX(6px)}
+  100%{transform:translate(-50%,-50%) translateX(0)}
+}
+
+
+/******* SHAKE VOLCANO *******/
+.volcano-shake {
+  animation: volcanoShake 0.8s;
+}
+
+@keyframes volcanoShake {
+  0%{transform:translateX(0)}
+  25%{transform:translateX(-6px)}
+  50%{transform:translateX(6px)}
+  75%{transform:translateX(-4px)}
+  100%{transform:translateX(0)}
+}
+
+/* Disable fading */
+.fade-out {
+  opacity:1 !important;
+}
+
+
+  </style>
 </head>
 
 <body>
@@ -63,7 +247,112 @@
   <audio id="sound-correct" src="assets/correct.mp3"></audio>
   <audio id="sound-wrong" src="assets/wrong.mp3"></audio>
 
-  <script src="main.js"></script>
+  <script>
+let draggedLabel = null;
+let correctCount = 0;
+const totalParts = 5;
+
+const labels = document.querySelectorAll(".label");
+const targets = document.querySelectorAll(".drop-target");
+
+const volcanoImg = document.getElementById("volcanoImg");
+const explosionImg = document.getElementById("explosionImg");
+
+const sCorrect = document.getElementById("sound-correct");
+const sWrong = document.getElementById("sound-wrong");
+
+const resetBtn = document.getElementById("resetBtn");
+
+// DRAG EVENTS
+labels.forEach(label => {
+  label.addEventListener("dragstart", (e) => {
+    draggedLabel = e.target;
+    setTimeout(() => e.target.classList.add("hide-while-drag"), 10);
+  });
+
+  label.addEventListener("dragend", (e) => {
+    e.target.classList.remove("hide-while-drag");
+  });
+});
+
+targets.forEach(target => {
+  target.addEventListener("dragover", (e) => e.preventDefault());
+
+  target.addEventListener("drop", function (e) {
+    const correctName = this.dataset.accept;
+    const draggedName = draggedLabel.dataset.name;
+
+    if (correctName === draggedName) {
+      this.classList.add("correct");
+      this.textContent = draggedLabel.textContent.trim();
+      draggedLabel.style.display = "none";
+      sCorrect.play();
+
+      correctCount++;
+      if (correctCount === totalParts) triggerExplosion();
+
+    } else {
+      this.classList.add("wrong");
+      sWrong.play();
+      setTimeout(() => this.classList.remove("wrong"), 500);
+    }
+  });
+});
+
+// EXPLOSION FUNCTION
+function triggerExplosion() {
+
+  // hide labels & targets
+  labels.forEach(l => l.style.display = "none");
+  targets.forEach(t => t.style.display = "none");
+
+  // volcano shake
+  volcanoImg.classList.add("volcano-shake");
+
+  // switch to explosion GIF
+  setTimeout(() => {
+    volcanoImg.style.opacity = "0";
+    explosionImg.style.opacity = "1";
+  }, 900);
+}
+
+// RESET FUNCTION
+resetBtn.addEventListener("click", resetActivity);
+
+function resetActivity() {
+
+  correctCount = 0;
+
+  // Reset labels
+  labels.forEach(label => {
+    label.style.display = "block";
+  });
+
+  // Reset targets with placeholder text
+  targets.forEach(target => {
+    const acceptName = target.dataset.accept;
+    target.textContent = defaultPlaceholders[acceptName];
+    target.classList.remove("correct", "wrong");
+    target.style.display = "block";
+  });
+
+  // Reset images
+  volcanoImg.style.opacity = "1";
+  explosionImg.style.opacity = "0";
+  volcanoImg.classList.remove("volcano-shake");
+
+  // Scroll to top so user sees starting screen
+  window.scrollTo({ top: 0, behavior: "smooth" });
+}
+
+
+const defaultPlaceholders = {
+  crater: "Drop crater",
+  ash: "Drop ash",
+  vent: "Drop vent",
+  magma: "Drop magma",
+  lava: "Drop lava"
+};
+  </script>
 </body>
 </html>
-
