@@ -1,0 +1,180 @@
+body {
+  font-family: "Poppins", sans-serif;
+  background: #f8fafc;
+  margin: 0;
+  padding: 20px;
+  color: #333;
+}
+
+.module-container {
+  max-width: 850px;
+  margin: auto;
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+}
+
+.module-container-hidden {
+  max-width: 850px;
+  margin: auto;
+ 
+ 
+  overflow: hidden;
+}
+
+
+.module-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #edf2ff;
+  padding: 15px 20px;
+  border-bottom: 1px solid #cbd5f7;
+}
+
+h1 {
+   display: flex;
+  justify-content: space-between;
+  align-items: center;
+  color: #2a4d9e;
+  font-size: 28px; /* Slightly larger for better hierarchy */
+  margin: 0;
+  padding-left: 2%;
+  font-weight: 700;
+}
+
+.module-header h2 {
+  color: #2a4d9e;
+  font-size: 22px;
+  margin: 0;
+  font-weight: 600;
+}
+
+h3 {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  color: #2a4d9e;
+  font-size: 18px;
+  margin: 0;
+  padding-bottom: 1%;
+  padding-left: 2%;
+
+  font-weight: 500;
+}
+
+.module-header button {
+  border: none;
+  background: none;
+  color: #2a4d9e;
+  font-weight: bold;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+
+
+.accordion-item {
+  border-top: 1px solid #e0e5f0;
+}
+
+.accordion-header {
+  padding: 15px 20px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 600;
+  background: #fff;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.accordion-header:hover {
+  background: #f3f5ff;
+}
+
+.arrow {
+  font-size: 13px;
+  color: #444;
+  transition: transform 0.3s;
+}
+
+.accordion-item.active .arrow {
+  transform: rotate(90deg);
+}
+
+.accordion-content {
+  display: none;
+  padding: 10px 25px 15px 45px;
+  background: #fcfdff;
+  border-left: 3px solid #2a4d9e;
+}
+
+.accordion-item.active .accordion-content {
+  display: block;
+}
+
+/* LESSON ITEM STYLE */
+.lesson-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 5px;
+  border-bottom: 1px solid #eee;
+}
+
+.lesson-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.lesson-left-no-header
+{
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 5px;
+  
+}
+
+.icon {
+  font-size: 18px;
+}
+
+.book {
+  color: #2a4d9e;
+}
+
+.quiz {
+  color: #e91e63;
+}
+
+.activity {
+  color: #009688;
+}
+
+.lesson-item a {
+  color: #0047ab;
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.lesson-item a:hover {
+  text-decoration: underline;
+}
+
+.done-btn {
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  background: #fff;
+  padding: 5px 12px;
+  cursor: pointer;
+  font-size: 13px;
+  transition: all 0.2s;
+}
+
+.done-btn:hover {
+  background: #2a4d9e;
+  color: #fff;
+}
