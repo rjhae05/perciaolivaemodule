@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Volcano Parts - Drag & Drop</title>
+  <link rel="stylesheet" href="https://github.com/rjhae05/perciaolivaemodule/blob/main/css/main.css" />
+</head>
+
+<body>
+  <header>
+    <h1>Volcano — Parts Drag & Drop</h1>
+  </header>
+
+  <main class="container">
+    
+    <section class="left-panel">
+      <h2>Labels</h2>
+
+      <div id="labels">
+        <div class="label" draggable="true" data-name="crater">
+          <img src="../assets/icons/crater.png" class="icon"> Crater
+        </div>
+        <div class="label" draggable="true" data-name="vent">
+          <img src="../assets/icons/vent.png" class="icon"> Vent
+        </div>
+        <div class="label" draggable="true" data-name="magma">
+          <img src="../assets/icons/magma.png" class="icon"> Magma Chamber
+        </div>
+        <div class="label" draggable="true" data-name="lava">
+          <img src="../assets/icons/lava.png" class="icon"> Lava Flow
+        </div>
+        <div class="label" draggable="true" data-name="ash">
+          <img src="../assets/icons/ash.png" class="icon"> Ash Cloud
+        </div>
+      </div>
+
+      <button id="resetBtn">Reset</button>
+    </section>
+
+
+    <section class="right-panel">
+      <div class="volcano-wrap">
+
+        <!-- Default Volcano -->
+        <img id="volcanoImg" src="../assets/volcano.png" class="volcano-img" alt="Volcano">
+
+        <!-- Explosion GIF -->
+        <img id="explosionImg" src="../assets/Volcano_Explotion.gif" class="explosion-img" />
+
+        <!-- Drop targets -->
+        <div class="drop-target" data-accept="crater" style="top:8%; left:47%;">Drop crater</div>
+        <div class="drop-target" data-accept="vent" style="top:30%; left:46%;">Drop vent</div>
+        <div class="drop-target" data-accept="magma" style="top:50%; left:35%;">Drop magma</div>
+        <div class="drop-target" data-accept="lava" style="top:70%; left:54%;">Drop lava</div>
+        <div class="drop-target" data-accept="ash" style="top:6%; left:62%;">Drop ash</div>
+
+      </div>
+    </section>
+
+  </main>
+
+  <audio id="sound-correct" src="assets/correct.mp3"></audio>
+  <audio id="sound-wrong" src="assets/wrong.mp3"></audio>
+
+  <script src="../js/main.js"></script>
+</body>
+</html>
