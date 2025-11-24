@@ -52,11 +52,8 @@
   <div id="map"></div>
 
   <div class="controls">
-    <strong>Search / Filters</strong>
-    <input id="vsearch" type="text" placeholder="Search volcano name (Enter)" />
-    <label>
-      <input type="checkbox" id="showActive" checked /> Show Active
-    </label>
+    <strong>Search Volcano</strong>
+    <input id="vsearch" type="text" placeholder="Search volcano (Enter)" />
 
     <div style="margin-top:8px;">
       <button id="zoomAll" class="btn">Zoom to All</button>
@@ -67,7 +64,6 @@
   <div class="legend">
     <strong>Volcano Status</strong>
     <div><span style="background:#d93025;"></span> Active</div>
-   
   </div>
 
   <!-- Leaflet JS -->
@@ -84,18 +80,12 @@
       attribution: '© OpenStreetMap'
     }).addTo(map);
 
-    // ---------- COLOR / ICON ----------
-    function getColor(status) {
-      if (status === "Active") return "#d93025";
-      if (status === "Potentially Active") return "#f57f17";
-      return "#546e7a";
+    // ---------- COLOR ----------
+    function getColor() {
+      return "#d93025"; // active = red
     }
 
-    // ---------- DATA ARRAYS ----------
-    // NOTE: Replace / paste the FULL arrays here (all 380 items).
-    // Format per item: { name: "Mayon Volcano", lat: 13.257, lng: 123.685 }
-    // --- Sample entries (you will replace these with full arrays) ---
-
+    // ---------- ACTIVE VOLCANOES ONLY ----------
     const activeVolcanoes = [
       { name: "Mayon Volcano", lat: 13.257, lng: 123.685 },
       { name: "Taal Volcano", lat: 14.002, lng: 120.993 },
@@ -104,71 +94,42 @@
       { name: "Kanlaon", lat: 10.5232, lng: 123.2503 },
       { name: "Smith Volcano (Babuyan)", lat: 19.5339, lng: 121.9169 },
       { name: "Didicas", lat: 19.0770, lng: 122.2019 },
-      { name: "Hibok-hibok (Camiguin)", lat: 9.1119, lng: 124.4597 },
-      { name: "Ambalatungan (Mount Binuluan)", lat: 17.3062, lng: 121.0939 },
-      { name: "Biliran (Anas)", lat: 11.5581, lng: 124.5120 },
+      { name: "Hibok-hibok", lat: 9.1119, lng: 124.4597 },
+      { name: "Ambalatungan (Binuluan)", lat: 17.3062, lng: 121.0939 },
+      { name: "Biliran", lat: 11.5581, lng: 124.5120 },
       { name: "Bud Dajo", lat: 6.01295, lng: 121.05772 },
       { name: "Cabalian", lat: 10.286, lng: 125.2218 },
       { name: "Cagua", lat: 18.2219, lng: 122.1231 },
       { name: "Camiguin de Babuyanes", lat: 18.83, lng: 121.86 },
       { name: "Iraya", lat: 20.4689, lng: 122.0100 },
-      { name: "Iriga (Ragay)", lat: 13.4570, lng: 123.4570 },
+      { name: "Iriga", lat: 13.4570, lng: 123.4570 },
       { name: "Isarog", lat: 13.65685, lng: 123.38087 },
       { name: "Leonard Kniaseff", lat: 7.3820, lng: 126.0470 },
       { name: "Makaturing", lat: 7.647, lng: 124.320 },
       { name: "Matutum", lat: 6.3667, lng: 125.0667 },
-      { name: "Musuan (Calayo)", lat: 7.8769, lng: 125.0681 },
-      { name: "Parker (Mount Parker)", lat: 6.1130, lng: 124.8897 },
-      { name: "Ragang", lat: 7.7, lng: 124.5 },
-      
-     
+      { name: "Musuan", lat: 7.8769, lng: 125.0681 },
+      { name: "Parker", lat: 6.1130, lng: 124.8897 },
+      { name: "Ragang", lat: 7.7, lng: 124.5 }
     ];
 
-
-    /* ----------------------------------------------------------------------
-       IMPORTANT:
-       Replace the three arrays above (activeVolcanoes, potentialVolcanoes, inactiveVolcanoes)
-       with the FULL lists (all 380 items) in the same format:
-       [
-         { name: "Volcano name", lat: 12.345, lng: 123.456 },
-         ...
-       ]
-       ---------------------------------------------------------------------- */
-
-    // ---------- MERGE INTO ONE LIST WITH STATUS ----------
-    function withStatus(list, status) {
-      return list.map(v => ({ name: v.name, lat: v.lat, lng: v.lng, status }));
-    }
-
-    const volcanoes = [
-      ...withStatus(activeVolcanoes, "Active"),
-      ...withStatus(potentialVolcanoes, "Potentially Active"),
-      ...withStatus(inactiveVolcanoes, "Inactive")
-    ];
-
-    // ---------- MARKER CLUSTERS ----------
+    // ---------- MARKERS ----------
     const markerLayer = L.markerClusterGroup();
-    const markerRefs = []; // keep refs for search/focus
+    const markerRefs = [];
 
     function addMarkers() {
       markerLayer.clearLayers();
       markerRefs.length = 0;
 
-      volcanoes.forEach(v => {
-        // Do not add marker if the corresponding filter is unchecked
-        if (v.status === "Active" && !document.getElementById('showActive').checked) return;
-        if (v.status === "Potentially Active" && !document.getElementById('showPotential').checked) return;
-        if (v.status === "Inactive" && !document.getElementById('showInactive').checked) return;
-
+      activeVolcanoes.forEach(v => {
         const marker = L.circleMarker([v.lat, v.lng], {
           radius: 7,
-          color: getColor(v.status),
-          fillColor: getColor(v.status),
+          color: getColor(),
+          fillColor: getColor(),
           fillOpacity: 0.9,
           weight: 1
         });
 
-        marker.bindPopup(`<strong>${v.name}</strong><br/><em>${v.status}</em>`);
+        marker.bindPopup(`<strong>${v.name}</strong><br/><em>Active Volcano</em>`);
         markerLayer.addLayer(marker);
         markerRefs.push({ volcano: v, marker });
       });
@@ -176,35 +137,23 @@
       map.addLayer(markerLayer);
     }
 
-    // initial add
     addMarkers();
-
-    // ---------- FILTER TOGGLES ----------
-    document.getElementById('showActive').addEventListener('change', addMarkers);
-    document.getElementById('showPotential').addEventListener('change', addMarkers);
-    document.getElementById('showInactive').addEventListener('change', addMarkers);
 
     // ---------- SEARCH ----------
     function searchVolcano(query) {
       const q = (query || '').trim().toLowerCase();
-      if (!q) { alert("Type a volcano name and press Enter."); return; }
+      if (!q) return;
 
-      const found = volcanoes.find(v => v.name.toLowerCase().includes(q));
+      const found = activeVolcanoes.find(v => v.name.toLowerCase().includes(q));
       if (!found) {
-        alert("Volcano not found. Try a simpler name like 'Mayon' or 'Taal'.");
+        alert("Volcano not found.");
         return;
       }
-
-      // ensure filters show the found volcano
-      if (found.status === "Active") document.getElementById('showActive').checked = true;
-      if (found.status === "Potentially Active") document.getElementById('showPotential').checked = true;
-      if (found.status === "Inactive") document.getElementById('showInactive').checked = true;
-      addMarkers();
 
       map.setView([found.lat, found.lng], 11);
       L.popup()
         .setLatLng([found.lat, found.lng])
-        .setContent(`<h3>${found.name}</h3><p><strong>Status:</strong> ${found.status}</p>`)
+        .setContent(`<h3>${found.name}</h3><p><strong>Status:</strong> Active</p>`)
         .openOn(map);
     }
 
@@ -223,35 +172,6 @@
       const group = L.featureGroup(markerLayer.getLayers());
       map.fitBounds(group.getBounds().pad(0.25));
     });
-
-    // ---------- HELPER: load external JSON (optional) ----------
-    // If you have a file volcanoes.json formatted like:
-    // [ { "name":"Mayon", "lat":13.257, "lng":123.685, "status":"Active" }, ... ]
-    // you can call loadExternalJSON('/path/to/volcanoes.json') to populate.
-    async function loadExternalJSON(url) {
-      try {
-        const res = await fetch(url);
-        if (!res.ok) throw new Error("Failed to fetch " + url);
-        const data = await res.json();
-        // split into arrays (optional)
-        const a = data.filter(d => d.status === 'Active').map(d => ({ name: d.name, lat: d.lat, lng: d.lng }));
-        const p = data.filter(d => d.status === 'Potentially Active').map(d => ({ name: d.name, lat: d.lat, lng: d.lng }));
-        const i = data.filter(d => d.status === 'Inactive').map(d => ({ name: d.name, lat: d.lat, lng: d.lng }));
-        // replace arrays and redraw
-        activeVolcanoes.length = 0; activeVolcanoes.push(...a);
-        potentialVolcanoes.length = 0; potentialVolcanoes.push(...p);
-        inactiveVolcanoes.length = 0; inactiveVolcanoes.push(...i);
-
-        // rebuild combined list
-        volcanoes.length = 0;
-        volcanoes.push(...withStatus(activeVolcanoes, "Active"), ...withStatus(potentialVolcanoes, "Potentially Active"), ...withStatus(inactiveVolcanoes, "Inactive"));
-        addMarkers();
-        alert("Loaded volcanoes from " + url);
-      } catch (err) {
-        console.error(err);
-        alert("Error loading external JSON: " + err.message);
-      }
-    }
   </script>
 </body>
 </html>
