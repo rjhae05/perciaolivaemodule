@@ -226,6 +226,66 @@
     .ground{width:320px}
   }
 
+  /* --- CLASSIC VERTICAL THERMOMETER --- */
+
+.classic-thermo-container {
+  margin-top: 20px;
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+/* Thermometer body */
+.classic-thermo {
+  position: relative;
+  width: 40px;
+  height: 200px;
+  background: #fafafa;
+  border: 4px solid #999;
+  border-radius: 25px;
+  display: flex;
+  justify-content: center;
+  align-items: flex-end;
+  overflow: hidden;
+  box-shadow: inset 0 0 12px rgba(0,0,0,0.25);
+}
+
+/* Mercury that rises */
+.classic-mercury {
+  position: absolute;
+  bottom: 25px; /* leaves space for bottom bulb */
+  width: 100%;
+  height: 0%;
+  background: #c70000;
+  border-radius: 20px;
+  transition: height 0.4s ease;
+  box-shadow: inset 0 0 8px rgba(0,0,0,0.5);
+}
+
+/* Bottom bulb */
+.classic-bulb {
+  position: absolute;
+  bottom: -10px;
+  width: 55px;
+  height: 55px;
+  background: #d10000;
+  border: 4px solid #999;
+  border-radius: 50%;
+  box-shadow: inset 0 0 10px rgba(0,0,0,0.6);
+}
+
+/* Scale numbers */
+.classic-scale {
+  height: 200px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  font-size: 13px;
+  font-weight: bold;
+  color: #444;
+}
+
+
 </style>
 </head>
 <body>
@@ -270,6 +330,21 @@
 
   <!-- Right: Visualization -->
   <div class="viz panel">
+    <div class="classic-thermo-container">
+  <div class="classic-thermo">
+    <div class="classic-mercury" id="classicMercury"></div>
+    <div class="classic-bulb"></div>
+  </div>
+
+  <div class="classic-scale">
+    <span>100°</span>
+    <span>75°</span>
+    <span>50°</span>
+    <span>25°</span>
+    <span>0°</span>
+  </div>
+</div>
+
     <div class="scene" id="scene">
       <div class="ground">
         <div class="mount">
