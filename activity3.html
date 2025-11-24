@@ -13,7 +13,7 @@
     --accent: #e85d04;
     --cool: #2b7a78;
     --hot: #f94144;
-    --bubble-color: rgba(255,255,255,0.9);
+    --bubble-color: rgba(255,255,255,0.95);
     --lava-color-1: #ff7a18;
     --lava-color-2: #ff2d00;
     --gauge-color: #ffb703;
@@ -53,32 +53,21 @@
   h1{font-size:20px;margin:0 0 10px}
   p.lead{margin:6px 0 14px;color:#234}
 
-  .therm-row{
-    display:flex;
-    align-items:center;
-    gap:10px;
-    margin-bottom:12px;
-  }
-  .therm {
-    transform: rotate(-90deg);
-    width: 180px;
-    height: 40px;
-    --thumb-size:18px;
-  }
-  input[type=range]{
+  /* hide the original slider visually (still available to assistive tech) */
+  .panel input[type=range]{
     -webkit-appearance:none;
     width:100%;
     height:8px;
     border-radius:8px;
     background:linear-gradient(90deg,#8ecae6, #023047);
     outline:none;
+    /* hide visually but keep in DOM */
+    opacity:0; height:0; pointer-events:none;
   }
-  input[type=range]::-webkit-slider-thumb{
-    -webkit-appearance:none;
-    width:18px;height:18px;border-radius:50%;
-    background:linear-gradient(#fff,#ddd);
-    border:2px solid rgba(0,0,0,0.18);
-    box-shadow:0 2px 4px rgba(0,0,0,0.15);
+
+  /* visible fallback for browsers (if JS disabled) */
+  .no-js .panel input[type=range] {
+    opacity:1; height:8px; pointer-events:auto;
   }
 
   .stat {
@@ -115,176 +104,239 @@
 
   /* RIGHT PANEL - Visualization */
   .viz {
-    background: linear-gradient(180deg, rgba(255,255,255,0.9), rgba(255,255,255,0.86));
+    background: linear-gradient(180deg, rgba(255,255,255,0.95), rgba(255,255,255,0.9));
     border-radius:12px;padding:18px; min-height:520px;
     display:flex;align-items:center;justify-content:center; position:relative; overflow:hidden;
     box-shadow:0 8px 30px rgba(12,18,20,0.06);
   }
 
-  /* Decorative background - user uploaded image used as background */
-  .scene {
-    width:100%;
-    max-width:740px;
-    height:460px;
-    border-radius:10px;
-    position:relative;
-    overflow:hidden;
-    background-image: var(--bg-url);
-    background-size:cover;
-    background-position:center right;
-    box-shadow: inset 0 30px 120px rgba(0,0,0,0.12);
-  }
-
-  /* Volcano area */
-  .ground {
-    position:absolute;
-    left:50%;
-    transform:translateX(-50%);
-    bottom:36px;
-    width:420px;
-    height:220px;
-    display:flex;align-items:flex-end;justify-content:center;
-    pointer-events:none;
-  }
-
-  /* Mountain silhouette */
-  .mount {
-    position:relative;
-    width:320px;height:200px;
-    background:linear-gradient(#6fa3d1,#3a6fa8);
-    clip-path: polygon(50% 0%, 100% 100%, 0% 100%);
-    box-shadow:0 30px 50px rgba(0,0,0,0.18) inset;
-  }
-
-  /* light streaks */
-  .mount .streak{ position:absolute; background: rgba(255,255,255,0.25); filter:blur(2px); border-radius:20px;}
-  .s1{width:180px;height:30px; top:80px; left:10px; transform:rotate(-8deg)}
-  .s2{width:120px;height:22px; top:110px; left:70px; transform:rotate(-6deg)}
-  .s3{width:80px;height:18px; top:140px; left:110px; transform:rotate(-4deg)}
-
-  /* Crater */
-  .crater {
-    position:absolute;
-    width:60px;height:24px;border-radius:50%;
-    background: linear-gradient(#14232f,#0e2a3f);
-    top:6px;left:50%; transform:translateX(-50%);
-    box-shadow: 0 -8px 10px rgba(0,0,0,0.45);
-  }
-
-  /* Lava stem (base animation modified by temperature) */
-  .lava-stem {
-    position:absolute; left:50%; transform:translateX(-50%); bottom:36px;
-    width:28px; height:26px; border-radius:50%;
-    background:linear-gradient(#ff7a18,#ff2d00);
-    opacity:0; transition: all .2s linear;
-    box-shadow:0 4px 18px rgba(255,60,10,0.45);
-  }
-
-  /* Thin lava flowing overlay (longer smoother stream) */
-  .lava-flow {
-    position:absolute; left:50%; transform:translateX(-50%); bottom:56px;
-    width:40px; height:120px; border-radius:20px;
-    background: linear-gradient(#ffb37a, #ff4b24 70%);
-    opacity:0; transition:opacity .25s;
-    filter: blur(0.6px);
-    transform-origin: top;
-  }
-
-  /* Bubbles container */
-  .bubbles {
-    position:absolute; left:50%; transform:translateX(-50%); bottom:90px;
-    width:120px; height:140px; pointer-events:none; overflow:visible;
-  }
-
-  .bubble {
-    position:absolute;
-    bottom:0;
-    left:50%;
-    transform:translateX(-50%) translateY(0) scale(1);
-    width:10px;height:10px;border-radius:50%;
-    background:var(--bubble-color);
-    opacity:0.95;
-    box-shadow:0 1px 6px rgba(0,0,0,0.12);
-    animation: bubbleRise linear forwards;
-  }
-
-  @keyframes bubbleRise {
-    to { transform: translateX(calc(-50% + var(--drift, 0px))) translateY(-160px) scale(0.6); opacity:0; }
-  }
-
-  /* Labels under scene */
-  .labels {
-    position:absolute; bottom:6px; left:6px; color:#05386b; font-weight:600;
-    background: rgba(255,255,255,0.6); padding:6px 8px; border-radius:8px;
-    font-size:14px;
-  }
-
-  /* small responsive */
-  @media (max-width:980px){
-    .app{grid-template-columns:1fr; padding:12px}
-    .scene{height:380px}
-    .ground{width:320px}
-  }
-
-  /* --- CLASSIC VERTICAL THERMOMETER --- */
-
-.classic-thermo-container {
-  margin-top: 20px;
-  display: flex;
-  align-items: center;
-  gap: 15px;
+  /* ERUPTION EFFECTS */
+@keyframes shake {
+  0%, 100% { transform: translate(0,0); }
+  20% { transform: translate(-6px, 4px); }
+  40% { transform: translate(6px, -4px); }
+  60% { transform: translate(-4px, 3px); }
+  80% { transform: translate(4px, -3px); }
 }
 
-/* Thermometer body */
+@keyframes burst {
+  0% { transform: scale(0.25); opacity: 1; filter: blur(0px); }
+  60% { transform: scale(1.6); opacity: .9; filter: blur(2px); }
+  100% { transform: scale(2.6); opacity: 0; filter: blur(4px); }
+}
+
+@keyframes ash {
+  0% { opacity: 0.0; transform: translateY(0); }
+  30% { opacity: 0.85; transform: translateY(-18px); }
+  100% { opacity: 0; transform: translateY(-120px); }
+}
+
+.eruption-burst {
+  position: absolute;
+  bottom: 140px;
+  left: 50%;
+  width: 120px;
+  height: 120px;
+  background: radial-gradient(circle at 40% 30%, #ffd5a8, #ff6a00 60%, rgba(255,0,0,0.9));
+  border-radius: 50%;
+  transform: translateX(-50%);
+  animation: burst 1.2s ease-out forwards;
+  pointer-events: none;
+  z-index: 40;
+  mix-blend-mode: screen;
+}
+
+.ash-cloud {
+  position: absolute;
+  bottom: 220px;
+  left: 50%;
+  width: 200px;
+  height: 90px;
+  background: rgba(70,70,70,0.55);
+  border-radius: 50%;
+  transform: translateX(-50%);
+  animation: ash 2.4s ease-out forwards;
+  filter: blur(2px);
+  pointer-events: none;
+  z-index: 35;
+}
+
+/* Decorative background - user uploaded image used as background */
+.scene {
+  width:100%;
+  max-width:740px;
+  height:460px;
+  border-radius:10px;
+  position:relative;
+  overflow:hidden;
+  background-image: var(--bg-url);
+  background-size:cover;
+  background-position:center right;
+  box-shadow: inset 0 30px 120px rgba(0,0,0,0.12);
+}
+
+/* Volcano image (replaces silhouette) */
+#volcanoImg {
+  position: absolute;
+  bottom: 36px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 420px;          /* match ground width */
+  height: auto;
+  pointer-events: none;
+  z-index: 20;
+  filter: drop-shadow(0 8px 24px rgba(0,0,0,0.35));
+}
+
+/* Volcano area (kept for positioning lava elements) */
+.ground {
+  position:absolute;
+  left:50%;
+  transform:translateX(-50%);
+  bottom:36px;
+  width:420px;
+  height:220px;
+  display:flex;align-items:flex-end;justify-content:center;
+  pointer-events:none;
+}
+
+/* Lava stem (improved look) */
+.lava-stem {
+  position:absolute; left:50%; transform:translateX(-50%); bottom:120px;
+  width:34px; height:26px; border-radius:14px;
+  background: radial-gradient(circle at 40% 20%, #ffd69b, #ff4b00 60%);
+  opacity:0.95; transition: all .18s linear;
+  box-shadow:0 8px 28px rgba(255,90,10,0.45), inset 0 -6px 10px rgba(255,255,255,0.08);
+  z-index: 30;
+}
+
+/* Lava flowing overlay */
+.lava-flow {
+  position:absolute; left:50%; transform:translateX(-50%); bottom:140px;
+  width:48px; height:120px; border-radius:28px;
+  background: linear-gradient(180deg,#ffb37a, #ff4b24 70%);
+  opacity:0.0; transition:opacity .25s, height .2s, width .2s;
+  filter: blur(0.8px);
+  transform-origin: top;
+  z-index: 25;
+}
+
+/* Bubbles container */
+.bubbles {
+  position:absolute; left:50%; transform:translateX(-50%); bottom:170px;
+  width:140px; height:180px; pointer-events:none; overflow:visible;
+  z-index: 50;
+}
+
+.bubble {
+  position:absolute;
+  bottom:0;
+  left:50%;
+  transform:translateX(-50%) translateY(0) scale(1);
+  width:10px;height:10px;border-radius:50%;
+  background:var(--bubble-color);
+  opacity:0.95;
+  box-shadow:0 1px 6px rgba(0,0,0,0.12);
+  animation: bubbleRise linear forwards;
+}
+
+/* Labels under scene */
+.labels {
+  position:absolute; bottom:6px; left:6px; color:#05386b; font-weight:600;
+  background: rgba(255,255,255,0.7); padding:6px 8px; border-radius:8px;
+  font-size:14px; z-index: 60;
+}
+
+/* small responsive */
+@media (max-width:980px){
+  .app{grid-template-columns:1fr; padding:12px}
+  .scene{height:380px}
+  .ground{width:320px}
+  #volcanoImg { width: 320px; }
+}
+
+/* --- CLASSIC VERTICAL THERMOMETER (draggable) --- */
+.classic-thermo-container {
+  position: absolute;
+  top: 20px;
+  left: 18px;
+  display:flex;
+  align-items:center;
+  gap:12px;
+  z-index:80; /* float above scene */
+  user-select:none;
+}
+
+/* Thermometer body (draggable) */
 .classic-thermo {
   position: relative;
-  width: 40px;
-  height: 200px;
-  background: #fafafa;
-  border: 4px solid #999;
-  border-radius: 25px;
+  width: 46px;
+  height: 240px;
+  background: linear-gradient(#f6f6f6,#efefef);
+  border: 3px solid #bdbdbd;
+  border-radius: 28px;
   display: flex;
   justify-content: center;
   align-items: flex-end;
   overflow: hidden;
-  box-shadow: inset 0 0 12px rgba(0,0,0,0.25);
+  box-shadow: 0 6px 18px rgba(0,0,0,0.12), inset 0 2px 6px rgba(255,255,255,0.6);
+  cursor: grab;
+  touch-action: none;
 }
 
 /* Mercury that rises */
 .classic-mercury {
   position: absolute;
-  bottom: 25px; /* leaves space for bottom bulb */
-  width: 100%;
+  bottom: 30px; /* leave space for bulb */
+  width: 86%;
+  left: 7%;
   height: 0%;
-  background: #c70000;
-  border-radius: 20px;
-  transition: height 0.4s ease;
-  box-shadow: inset 0 0 8px rgba(0,0,0,0.5);
+  background: linear-gradient(#ff6a4d,#c70000);
+  border-radius: 18px;
+  transition: height 0.12s linear, box-shadow .12s;
+  box-shadow: inset 0 0 10px rgba(0,0,0,0.25);
 }
 
-/* Bottom bulb */
+/* Bulb */
 .classic-bulb {
-  position: absolute;
-  bottom: -10px;
-  width: 55px;
-  height: 55px;
-  background: #d10000;
-  border: 4px solid #999;
-  border-radius: 50%;
-  box-shadow: inset 0 0 10px rgba(0,0,0,0.6);
+  position:absolute;
+  bottom:-12px;
+  left:50%;
+  transform:translateX(-50%);
+  width: 68px;
+  height: 68px;
+  background: radial-gradient(circle at 35% 30%, #ffd1b8, #d60000 60%);
+  border-radius:50%;
+  border:4px solid #bdbdbd;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.12), inset 0 -8px 18px rgba(255,255,255,0.08);
 }
 
-/* Scale numbers */
-.classic-scale {
-  height: 200px;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  font-size: 13px;
-  font-weight: bold;
-  color: #444;
+/* little ticks (visual) */
+.classic-thermo .ticks {
+  position:absolute;
+  right:-36px;
+  height:100%;
+  display:flex;
+  flex-direction:column;
+  justify-content:space-between;
+  padding:24px 0;
+  color:#333;
+  font-weight:700;
+  font-size:12px;
+  pointer-events:none;
 }
 
+/* small touch helper */
+.classic-thermo .drag-hint {
+  position:absolute;
+  top:6px;
+  left:50%;
+  transform:translateX(-50%);
+  font-size:11px;color:#444;opacity:0.9;
+}
+
+/* visual feedback while dragging */
+.classic-thermo.dragging { cursor: grabbing; transform: scale(1.01); transition: transform .08s; }
 
 </style>
 </head>
@@ -294,11 +346,11 @@
   <!-- Left: Controls -->
   <div class="panel">
     <h1>Activity 3 — Under Pressure</h1>
-    <p class="lead">Drag the thermometer to change temperature. Watch how magma, bubbles and gas pressure react.</p>
+    <p class="lead">Drag the thermometer in the right panel (or use keyboard) to change temperature. Watch how magma, bubbles and gas pressure react.</p>
 
     <label style="display:block;font-weight:600;margin-bottom:8px">Temperature</label>
-    <!-- slider 0 = cold, 100 = hot -->
-    <input id="tempRange" type="range" min="0" max="100" value="50" style="width:100%;">
+    <!-- hidden but accessible slider (kept for a11y) -->
+    <input id="tempRange" type="range" min="0" max="100" value="50" aria-label="Temperature (0-100)">
 
     <div class="stat">
       <div class="box">
@@ -329,31 +381,32 @@
   </div>
 
   <!-- Right: Visualization -->
-  <div class="viz panel">
-    <div class="classic-thermo-container">
-  <div class="classic-thermo">
-    <div class="classic-mercury" id="classicMercury"></div>
-    <div class="classic-bulb"></div>
-  </div>
+  <div class="viz panel" id="vizPanel">
+    <!-- Draggable thermometer floating in the right panel -->
+    <div class="classic-thermo-container" id="thermoContainer">
+      <div class="classic-thermo" id="dragThermo" role="slider" aria-valuemin="0" aria-valuemax="100" aria-valuenow="50" tabindex="0">
+        <div class="drag-hint">Drag</div>
+        <div class="classic-mercury" id="classicMercury"></div>
+        <div class="classic-bulb"></div>
+        <div class="ticks">
+          <span>100°</span><span>75°</span><span>50°</span><span>25°</span><span>0°</span>
+        </div>
+      </div>
+    </div>
 
-  <div class="classic-scale">
-    <span>100°</span>
-    <span>75°</span>
-    <span>50°</span>
-    <span>25°</span>
-    <span>0°</span>
-  </div>
-</div>
+    <!-- volcano image (your PNG) -->
+    <img id="volcanoImg" src="/mnt/data/c30f4868-d4ee-479a-b24b-99377afc08dd.png" alt="Volcano">
 
     <div class="scene" id="scene">
       <div class="ground">
-        <div class="mount">
+        <!-- Keep mount structure for positioning lava elements -->
+        <div class="mount" aria-hidden="true">
           <div class="streak s1"></div>
           <div class="streak s2"></div>
           <div class="streak s3"></div>
           <div class="crater"></div>
-          <div class="lava-stem" id="lavaStem" style=""></div>
-          <div class="lava-flow" id="lavaFlow" style=""></div>
+          <div class="lava-stem" id="lavaStem"></div>
+          <div class="lava-flow" id="lavaFlow"></div>
           <div class="bubbles" id="bubbles"></div>
         </div>
       </div>
@@ -366,9 +419,7 @@
 </div>
 
 <script>
-// ---------------------------------------------------
-// DOM REFERENCES
-// ---------------------------------------------------
+// ---------------------- DOM refs ----------------------
 const tempRange = document.getElementById('tempRange');
 const tempLabel = document.getElementById('tempLabel');
 
@@ -384,171 +435,205 @@ const lavaFlow = document.getElementById('lavaFlow');
 const bubbles = document.getElementById('bubbles');
 const viscBadge = document.getElementById('viscBadge');
 
-// Classic thermometer
 const mercury = document.getElementById('classicMercury');
 
-// bubble timer
+const dragThermo = document.getElementById('dragThermo');
+const thermoContainer = document.getElementById('thermoContainer');
+const vizPanel = document.getElementById('vizPanel');
+
 let bubbleTimer = null;
+let lastEruptionAt = 0; // prevent continuous eruptions
 
-
-// ---------------------------------------------------
-// UTILITY: Map number range to another range
-// ---------------------------------------------------
+// helper
 function mapRange(v, a, b, c, d) {
   return c + (d - c) * ((v - a) / (b - a));
 }
 
-
-// ---------------------------------------------------
-// MAIN UPDATE FUNCTION
-// ---------------------------------------------------
+// ---------------------- update visuals ----------------------
 function updateFromTemp(t){
+  // clamp
+  t = Math.max(0, Math.min(100, Number(t)));
   tempLabel.textContent = Math.round(t);
 
-  // -----------------------------
-  // 1. VISCOSITY LOGIC
-  // -----------------------------
-  const viscosityIndex = 1 - (t / 100); // 0=thin, 1=thick
+  // update hidden range for accessibility and any other code
+  tempRange.value = t;
+  dragThermo.setAttribute('aria-valuenow', String(Math.round(t)));
 
-  let viscLabel =
-    viscosityIndex > 0.66 ? 'High (Thick)' :
-    viscosityIndex < 0.33 ? 'Low (Thin)' :
-    'Medium';
-
+  // viscosity
+  const viscosityIndex = 1 - (t / 100);
+  const viscLabel = viscosityIndex > 0.66 ? 'High (Thick)' : viscosityIndex < 0.33 ? 'Low (Thin)' : 'Medium';
   viscText.textContent = viscLabel;
   viscBadge.textContent = viscLabel;
 
-  // -----------------------------
-  // 2. GAS PRESSURE LOGIC
-  // -----------------------------
+  // pressure
   const pressurePercent = Math.round(mapRange(t, 0, 100, 10, 95));
-
   pressureFill.style.width = pressurePercent + '%';
-  pressureFill.style.background =
-    `linear-gradient(90deg, ${pressurePercent>60? '#f94144' : '#ffd166'}, #ff6b6b)`;
-
+  pressureFill.style.background = `linear-gradient(90deg, ${pressurePercent>60? '#f94144' : '#ffd166'}, #ff6b6b)`;
   pressurePct.textContent = pressurePercent + '%';
+  gasText.textContent = pressurePercent > 66 ? 'High' : pressurePercent < 33 ? 'Low' : 'Medium';
 
-  gasText.textContent =
-    pressurePercent > 66 ? 'High' :
-    pressurePercent < 33 ? 'Low' :
-    'Medium';
-
-  // -----------------------------
-  // 3. LAVA STEM LOGIC
-  // -----------------------------
+  // lava stem
   const stemHeight = Math.round(mapRange(t, 0, 100, 80, 10));
   lavaStem.style.height = stemHeight + 'px';
+  const warm = Math.round(mapRange(t, 0, 100, 120, 255));
+  lavaStem.style.background = `linear-gradient(rgb(${warm},90,20), rgb(${Math.max(0,warm-60)},20,0))`;
+  lavaStem.style.boxShadow = t > 70 ? '0 12px 36px rgba(255,90,10,0.45)' : '0 6px 18px rgba(0,0,0,0.12)';
 
-  // lava color warmth
-  const warm = Math.round(mapRange(t, 0, 100, 40, 255));
-  lavaStem.style.background =
-    `linear-gradient(rgb(${warm},90,20), rgb(${warm-30},20,0))`;
-
-  // -----------------------------
-  // 4. LAVA FLOW LOGIC
-  // -----------------------------
-  const flowOpacity = mapRange(t, 0, 100, 0.08, 0.98);
-  const flowHeight = Math.round(mapRange(t, 0, 100, 40, 160));
-  const flowWidth = Math.round(mapRange(t, 0, 100, 58, 32));
+  // lava flow
+  const flowOpacity = mapRange(t, 0, 100, 0.04, 1);
+  const flowHeight = Math.round(mapRange(t, 0, 100, 36, 160));
+  const flowWidth = Math.round(mapRange(t, 0, 100, 68, 28));
   lavaFlow.style.opacity = flowOpacity;
   lavaFlow.style.height = flowHeight + 'px';
   lavaFlow.style.width = flowWidth + 'px';
-  lavaFlow.style.borderRadius =
-    Math.max(10, Math.round(flowWidth/2)) + 'px';
+  lavaFlow.style.borderRadius = Math.max(12, Math.round(flowWidth/2)) + 'px';
+  lavaFlow.style.background = `linear-gradient(#ffcf9b, rgb(${Math.min(255,warm)},80,20) 70%)`;
+  lavaFlow.style.filter = t > 60 ? 'blur(0.6px) saturate(1.1)' : 'blur(0.4px) saturate(0.95)';
 
-  lavaFlow.style.background =
-    `linear-gradient(#ffb37a, rgb(${warm},60,20) 70%)`;
-
-  // -----------------------------
-  // 5. BUBBLES
-  // -----------------------------
+  // bubbles
   setupBubbles(t, pressurePercent, viscosityIndex);
 
-  // -----------------------------
-  // 6. CLASSIC THERMOMETER
-  // -----------------------------
-  const mercuryHeight = t + "%";
-  mercury.style.height = mercuryHeight;
+  // thermometer mercury
+  mercury.style.height = t + '%';
+  mercury.style.boxShadow = t > 75 ? "0 0 18px rgba(255,40,10,.85)" : "inset 0 0 8px rgba(0,0,0,0.25)";
 
-  // glow on high temp
-  mercury.style.boxShadow =
-    t > 75
-      ? "0 0 15px rgba(255,0,0,.8)"
-      : "inset 0 0 8px rgba(0,0,0,0.5)";
+  // eruption trigger (only once every ~3s to avoid spam)
+  if (t >= 100 && Date.now() - lastEruptionAt > 3000) {
+    triggerEruption();
+    lastEruptionAt = Date.now();
+  }
 }
 
-
-// ---------------------------------------------------
-// BUBBLE SYSTEM
-// ---------------------------------------------------
+// ---------------------- bubbles ----------------------
 function clearBubbles(){
-  if(bubbleTimer){
-    clearInterval(bubbleTimer);
-    bubbleTimer = null;
-  }
+  if (bubbleTimer) { clearInterval(bubbleTimer); bubbleTimer = null; }
   bubbles.innerHTML = '';
 }
 
-function spawnBubble(temp, pressure, viscosityIndex){
+function spawnBubble(temp) {
   const el = document.createElement('div');
   el.className = 'bubble';
-
-  // bubble size
-  const size = Math.round(mapRange(temp, 0, 100, 14, 6));
+  const size = Math.round(mapRange(temp, 0, 100, 16, 6));
   el.style.width = size + 'px';
   el.style.height = size + 'px';
-
-  // drift left/right
-  const drift = Math.round((Math.random() - 0.5) * 60);
-  el.style.setProperty('--drift', drift + 'px');
-
-  // speed
+  const drift = (Math.random() - 0.5) * 80;
+  el.style.setProperty('--drift', Math.round(drift) + 'px');
   const dur = mapRange(temp, 0, 100, 4200, 900);
   el.style.animationDuration = (dur/1000) + 's';
-
-  // bubble starting position
-  const offset = Math.round((Math.random()-0.5) * 80);
+  const offset = (Math.random()-0.5) * 100;
   el.style.left = (50 + offset/1.6) + '%';
-
+  el.style.opacity = 0.95;
   bubbles.appendChild(el);
-
-  // remove when done
-  setTimeout(() => el.remove(), dur + 200);
+  setTimeout(()=> el.remove(), dur + 300);
 }
 
 function setupBubbles(temp, pressurePercent, viscosityIndex){
   clearBubbles();
-
-  const interval = Math.max(120,
-    Math.round(mapRange(pressurePercent, 0, 100, 1400, 200))
-  );
-
-  const perTick = Math.max(1,
-    Math.round(mapRange(temp, 0, 100, 1, 4))
-  );
-
-  bubbleTimer = setInterval(() => {
-    for(let i=0;i<perTick;i++){
-      spawnBubble(temp, pressurePercent, viscosityIndex);
-    }
+  // interval inversely proportional to pressure
+  const interval = Math.max(90, Math.round(mapRange(pressurePercent, 0, 100, 1400, 160)));
+  const perTick = Math.max(1, Math.round(mapRange(temp, 0, 100, 1, 5)));
+  bubbleTimer = setInterval(()=> {
+    for (let i=0;i<perTick;i++) spawnBubble(temp);
   }, interval);
 }
 
+// ---------------------- eruption ----------------------
+function triggerEruption(){
+  // screen shake on vizPanel
+  vizPanel.style.animation = 'shake 0.8s ease';
+  setTimeout(()=> vizPanel.style.animation = '', 820);
 
-// ---------------------------------------------------
-// INITIALIZE
-// ---------------------------------------------------
-updateFromTemp(parseInt(tempRange.value, 10));
+  // burst + ash
+  const burst = document.createElement('div');
+  burst.className = 'eruption-burst';
+  document.body.appendChild(burst);
 
+  const ash = document.createElement('div');
+  ash.className = 'ash-cloud';
+  document.body.appendChild(ash);
 
-// ---------------------------------------------------
-// EVENT LISTENER
-// ---------------------------------------------------
-tempRange.addEventListener('input', e => {
-  const t = Number(e.target.value);
-  updateFromTemp(t);
+  // animate extra lava flare (quick flash + expand)
+  lavaFlow.style.opacity = 1;
+  lavaFlow.style.height = Math.max(180, parseInt(lavaFlow.style.height || '120')) + 'px';
+  lavaFlow.style.transition = 'height .6s ease, opacity .2s';
+
+  setTimeout(()=> {
+    burst.remove();
+    ash.remove();
+    // relax lava flow back a bit
+    lavaFlow.style.height = Math.max(120, parseInt(lavaFlow.style.height || '120') - 80) + 'px';
+  }, 1800);
+}
+
+// ---------------------- thermometer dragging ----------------------
+let dragging = false;
+
+function pointerDown(e){
+  e.preventDefault();
+  dragging = true;
+  dragThermo.classList.add('dragging');
+  // capture pointer if available
+  if (e.target.setPointerCapture) try { e.target.setPointerCapture(e.pointerId); } catch(e){}
+  handlePointerMove(e);
+}
+function pointerUp(e){
+  dragging = false;
+  dragThermo.classList.remove('dragging');
+  if (e.target.releasePointerCapture) try { e.target.releasePointerCapture(e.pointerId); } catch(e){}
+}
+function handlePointerMove(e){
+  if (!dragging && e.type !== 'keydown') return;
+  // thermometer bounding rect
+  const rect = dragThermo.getBoundingClientRect();
+  // compute y relative handle (pointer or keyboard)
+  let clientY;
+  if (e.type === 'keydown') clientY = null;
+  else if (e.touches) clientY = e.touches[0].clientY;
+  else clientY = (e.clientY !== undefined ? e.clientY : e.pageY);
+
+  let percent;
+  if (e.type === 'keydown') {
+    // keyboard control: ArrowUp / ArrowDown handled separately
+    return;
+  } else {
+    const relative = clientY - rect.top;
+    percent = 100 - Math.round((relative / rect.height) * 100);
+  }
+
+  percent = Math.max(0, Math.min(100, percent));
+  updateFromTemp(percent);
+}
+
+// keyboard support
+dragThermo.addEventListener('keydown', (ev)=>{
+  const cur = Number(tempRange.value);
+  if (ev.key === 'ArrowUp' || ev.key === 'ArrowRight') {
+    updateFromTemp(Math.min(100, cur + 2));
+    ev.preventDefault();
+  } else if (ev.key === 'ArrowDown' || ev.key === 'ArrowLeft') {
+    updateFromTemp(Math.max(0, cur - 2));
+    ev.preventDefault();
+  } else if (ev.key === 'Home') { updateFromTemp(0); ev.preventDefault(); }
+  else if (ev.key === 'End') { updateFromTemp(100); ev.preventDefault(); }
 });
+
+// pointer (mouse/touch) handlers
+dragThermo.addEventListener('pointerdown', pointerDown);
+window.addEventListener('pointerup', pointerUp);
+window.addEventListener('pointermove', (e)=> { if (dragging) handlePointerMove(e); });
+
+// touch fallback
+dragThermo.addEventListener('touchstart', (e)=>{ pointerDown(e); }, {passive:false});
+window.addEventListener('touchend', (e)=>{ pointerUp(e); }, {passive:false});
+window.addEventListener('touchmove', (e)=>{ if (dragging) handlePointerMove(e); }, {passive:false});
+
+// also update when the hidden input changes (keyboard/assistive tech)
+tempRange.addEventListener('input', (e)=>{
+  updateFromTemp(Number(e.target.value));
+});
+
+// initialize
+updateFromTemp(Number(tempRange.value));
 </script>
 
 </body>
