@@ -120,6 +120,21 @@
     display:flex;align-items:center;justify-content:center; position:relative; overflow:hidden;
     box-shadow:0 8px 30px rgba(12,18,20,0.06);
   }
+  #volcanoImg {
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 320px;      /* adjust size as needed */
+  height: auto;
+  pointer-events: none;
+  z-index: 10;
+}
+/* Hide the old shape if still present */
+.mount {
+  background: none;
+  clip-path: none;
+}
 
   /* Decorative background - user uploaded image used as background */
   .scene {
