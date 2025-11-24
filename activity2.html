@@ -3,13 +3,12 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Volcano Activity - Pure CSS</title>
+<title>Volcano Activity - Pure CSS Mayon</title>
 
 <style>
-/* ----------- GENERAL PAGE LAYOUT ----------- */
 body {
   font-family: Arial, sans-serif;
-  background: #f5f5f5;
+  background: #c0f0ff;
   padding: 20px;
   text-align: center;
 }
@@ -22,7 +21,7 @@ h1 { margin-bottom: 20px; }
   gap: 40px;
 }
 
-/* ----------- DRAG LABELS ----------- */
+/* ---- Drag Labels ---- */
 .label {
   padding: 10px 20px;
   background: #4a6cf7;
@@ -32,60 +31,84 @@ h1 { margin-bottom: 20px; }
   cursor: grab;
   font-weight: bold;
 }
+.label:active { opacity: 0.7; cursor: grabbing; }
 
-.label:active {
-  cursor: grabbing;
-  opacity: 0.7;
-}
-
-/* Drop Zone (Volcano wrapper) */
 .drop-zone {
-  width: 260px;
-  height: 260px;
-  padding: 10px;
+  width: 280px;
+  height: 300px;
   border-radius: 10px;
 }
 
-/* ----------- PURE CSS MAYON VOLCANO ----------- */
+/* ---- Mayon Volcano (Improved Realistic CSS) ---- */
 .volcano {
   position: relative;
-  width: 220px;
-  height: 200px;
+  width: 250px;
+  height: 260px;
   margin: 0 auto;
-  top: 20px;
 }
 
-/* Cone */
+/* Mountain Shape */
 .mountain {
-  width: 0;
-  height: 0;
-  border-left: 110px solid transparent;
-  border-right: 110px solid transparent;
-  border-bottom: 180px solid #5a3b22;
   position: absolute;
   bottom: 0;
   left: 0;
+  width: 250px;
+  height: 230px;
+  background: linear-gradient(#6894c7, #3b6ca3, #2f5585);
+  clip-path: polygon(50% 0%, 100% 100%, 0% 100%);
 }
 
-/* Crater */
+/* Mountain shading (light left side) */
+.mountain::before {
+  content: "";
+  position: absolute;
+  width: 250px;
+  height: 230px;
+  clip-path: polygon(50% 0%, 100% 100%, 0% 100%);
+  background: linear-gradient(to right, rgba(255,255,255,0.3), transparent);
+}
+
+/* Snow streak lines like reference photo */
+.streak {
+  position: absolute;
+  width: 120px;
+  height: 25px;
+  background: rgba(255,255,255,0.4);
+  border-radius: 20px;
+  filter: blur(3px);
+  opacity: 0.4;
+  transform: rotate(-8deg);
+}
+
+/* Left streak */
+.streak.s1 { top: 120px; left: 40px; width: 140px; }
+
+/* Mid streak */
+.streak.s2 { top: 150px; left: 80px; width: 110px; }
+
+/* Smaller streak */
+.streak.s3 { top: 180px; left: 100px; width: 80px; }
+
+/* Crater top */
 .crater {
   position: absolute;
   top: 8px;
-  left: 85px;
+  left: 100px;
   width: 50px;
-  height: 15px;
-  background: #3a2717;
+  height: 18px;
+  background: #20395d;
   border-radius: 50%;
-  z-index: 10;
+  z-index: 5;
+  box-shadow: 0px -8px 8px rgba(0,0,0,0.3);
 }
 
-/* Lava animation */
+/* ---- Lava ---- */
 .lava {
   position: absolute;
   top: 0;
-  left: 100px;
-  width: 20px;
-  height: 60px;
+  left: 118px;
+  width: 22px;
+  height: 70px;
   background: linear-gradient(orange, red);
   border-radius: 40%;
   transform: translateY(30px);
@@ -93,20 +116,19 @@ h1 { margin-bottom: 20px; }
   transition: 0.3s;
 }
 
-/* Smoke */
+/* ---- Smoke ---- */
 .smoke {
   position: absolute;
-  top: -10px;
-  left: 105px;
-  width: 25px;
-  height: 25px;
-  background: #ccc;
-  border-radius: 50%;
+  top: -15px;
+  left: 125px;
+  width: 30px;
+  height: 30px;
+  background: #ddd;
   opacity: 0;
+  border-radius: 50%;
 }
-
 .smoke.animate {
-  animation: puff 1.6s infinite;
+  animation: puff 1.5s infinite;
 }
 
 @keyframes puff {
@@ -114,13 +136,13 @@ h1 { margin-bottom: 20px; }
   100% { transform: translateY(-45px) scale(1.8); opacity: 0; }
 }
 
-/* Ash */
+/* ---- Ash Burst ---- */
 .ash {
   position: absolute;
   top: 0;
-  left: 95px;
-  width: 40px;
-  height: 40px;
+  left: 110px;
+  width: 45px;
+  height: 45px;
   background: rgba(200,200,200,0.4);
   border-radius: 50%;
   filter: blur(3px);
@@ -141,29 +163,37 @@ h1 { margin-bottom: 20px; }
   transform: translateY(-45px);
 }
 
-/* Highlight when dragging */
+/* highlight drop zone */
 .drop-zone.highlight {
   outline: 3px dashed #ff9800;
 }
+
 </style>
 </head>
 <body>
 
-<h1>Activity: Classify the Volcano</h1>
+<h1>Activity: Classify the Volcano (Mayon)</h1>
 
 <div class="container">
 
-  <!-- Column for labels -->
+  <!-- Labels -->
   <div>
     <div class="label" draggable="true" data-status="active">ACTIVE</div>
     <div class="label" draggable="true" data-status="inactive">INACTIVE</div>
   </div>
 
-  <!-- Volcano Drop Zone -->
+  <!-- Volcano Drop -->
   <div class="drop-zone" id="dropZone">
 
     <div class="volcano" id="mayon">
+      
       <div class="mountain"></div>
+
+      <!-- Snow Streaks -->
+      <div class="streak s1"></div>
+      <div class="streak s2"></div>
+      <div class="streak s3"></div>
+
       <div class="crater"></div>
       <div class="lava"></div>
       <div class="smoke"></div>
@@ -175,8 +205,7 @@ h1 { margin-bottom: 20px; }
 </div>
 
 <script>
-/* ----------- DRAG & DROP ----------- */
-
+/* Drag & Drop */
 const labels = document.querySelectorAll(".label");
 const dropZone = document.getElementById("dropZone");
 
@@ -185,7 +214,6 @@ labels.forEach(label => {
     e.dataTransfer.setData("status", label.dataset.status);
     dropZone.classList.add("highlight");
   });
-
   label.addEventListener("dragend", () => {
     dropZone.classList.remove("highlight");
   });
@@ -196,18 +224,12 @@ dropZone.addEventListener("dragover", e => e.preventDefault());
 dropZone.addEventListener("drop", e => {
   e.preventDefault();
   const status = e.dataTransfer.getData("status");
-
-  if (status === "active") {
-    erupt("mayon");
-  } else {
-    calm("mayon");
-  }
-
+  if (status === "active") erupt("mayon");
+  else calm("mayon");
   dropZone.classList.remove("highlight");
 });
 
-/* ----------- ERUPTION FUNCTIONS ----------- */
-
+/* Eruption Animation */
 function erupt(id) {
   const v = document.getElementById(id);
   v.querySelector(".lava").classList.add("active");
