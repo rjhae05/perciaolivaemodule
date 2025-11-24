@@ -386,6 +386,9 @@ const lavaFlow = document.getElementById('lavaFlow');
 const bubbles = document.getElementById('bubbles');
 const viscBadge = document.getElementById('viscBadge');
 
+/* NEW thermometer ref */
+const mercury = document.getElementById('classicMercury');
+
 let bubbleTimer = null;
 
 // utility: map a value from [a,b] to [c,d]
@@ -397,43 +400,61 @@ function mapRange(v, a, b, c, d) {
 function updateFromTemp(t){
   tempLabel.textContent = Math.round(t);
 
-  // Viscosity: higher temp => lower viscosity (thin)
-  // we'll compute viscosityIndex in range [0..1] where 0=thin,1=thick
-  const viscosityIndex = 1 - (t / 100); // 0 when hot, 1 when cold
-  // text
-  let viscLabel = (viscosityIndex > 0.66) ? 'High (Thick)' : (viscosityIndex < 0.33) ? 'Low (Thin)' : 'Medium';
+  // Viscosity
+  const viscosityIndex = 1 - (t / 100);
+  let viscLabel = (viscosityIndex > 0.66) ? 'High (Thick)' :
+                  (viscosityIndex < 0.33) ? 'Low (Thin)' : 'Medium';
   viscText.textContent = viscLabel;
   viscBadge.textContent = viscLabel;
 
-  // Gas pressure model: high temp -> more bubbles -> higher pressure
-  // pressure percent roughly proportional to temperature
+  // Pressure
   const pressurePercent = Math.round(mapRange(t, 0, 100, 10, 95));
   pressureFill.style.width = pressurePercent + '%';
-  // color shift: cooler (blueish) -> hot (reddish)
-  pressureFill.style.background = `linear-gradient(90deg, ${pressurePercent>60? '#f94144' : '#ffd166'}, #ff6b6b)`;
+  pressureFill.style.background =
+    `linear-gradient(90deg, ${pressurePercent>60? '#f94144' : '#ffd166'}, #ff6b6b)`;
   pressurePct.textContent = pressurePercent + '%';
-  gasText.textContent = pressurePercent > 66 ? 'High' : pressurePercent < 33 ? 'Low' : 'Medium';
+  gasText.textContent = pressurePercent > 66 ? 'High' :
+                        pressurePercent < 33 ? 'Low' : 'Medium';
 
-  // Lava visual adjustments:
-  // lavaStem height = smaller when hot (magma flows quickly), taller / blobby when cold
-  const stemHeight = Math.round(mapRange(t, 0, 100, 80, 10)); // cold => 80px stub, hot => 10px (thin)
+  /* ----------------------------------------------- */
+  /* ✔ CLASSIC THERMOMETER UPDATE (ADDED HERE)       */
+  /* ----------------------------------------------- */
+
+  // Convert 0–100 into mercury height
+  const mercuryHeight = t + "%";
+  mercury.style.height = mercuryHeight;
+
+  // Glow on high temp
+  if (t > 75) {
+      mercury.style.boxShadow = "0 0 15px rgba(255,0,0,.8)";
+  } else {
+      mercury.style.boxShadow = "inset 0 0 8px rgba(0,0,0,0.5)";
+  }
+
+  /* ----------------------------------------------- */
+  /* END OF THERMOMETER UPDATE                       */
+  /* ----------------------------------------------- */
+
+  // Lava visuals
+  const stemHeight = Math.round(mapRange(t, 0, 100, 80, 10));
   lavaStem.style.height = stemHeight + 'px';
-  // lavaFlow opacity & height for long molten stream for hot
+
   const flowOpacity = mapRange(t, 0, 100, 0.08, 0.98);
   const flowHeight = Math.round(mapRange(t, 0, 100, 40, 160));
   lavaFlow.style.opacity = flowOpacity;
   lavaFlow.style.height = flowHeight + 'px';
-  // flow width smaller for hot (thin stream) or wider for cold (blob)
+
   const flowWidth = Math.round(mapRange(t, 0, 100, 58, 32));
   lavaFlow.style.width = flowWidth + 'px';
   lavaFlow.style.borderRadius = Math.max(10, Math.round(flowWidth/2)) + 'px';
 
-  // Lava color intensity: shift warmth
   const warm = Math.round(mapRange(t, 0, 100, 40, 255));
-  lavaStem.style.background = `linear-gradient(rgb(${Math.min(255,warm)},90,20), rgb(${Math.min(255,warm-30)},20,0))`;
-  lavaFlow.style.background = `linear-gradient(#ffb37a, rgb(${Math.min(255,warm)},60,20) 70%)`;
+  lavaStem.style.background =
+    `linear-gradient(rgb(${Math.min(255,warm)},90,20), rgb(${Math.min(255,warm-30)},20,0))`;
+  lavaFlow.style.background =
+    `linear-gradient(#ffb37a, rgb(${Math.min(255,warm)},60,20) 70%)`;
 
-  // Bubbles: frequency and size
+  // Bubbles
   setupBubbles(t, pressurePercent, viscosityIndex);
 }
 
@@ -446,31 +467,23 @@ function clearBubbles(){
 function spawnBubble(temp, pressure, viscosityIndex){
   const el = document.createElement('div');
   el.className = 'bubble';
-  // size: hotter -> slightly smaller but more -> cooler -> larger fewer
   const size = Math.round(mapRange(temp, 0, 100, 14, 6));
   el.style.width = size + 'px';
   el.style.height = size + 'px';
-  // drift left/right
   const drift = Math.round((Math.random() - 0.5) * 60);
   el.style.setProperty('--drift', drift + 'px');
-  // animation duration: hotter -> faster rise (shorter)
-  const dur = mapRange(temp, 0, 100, 4200, 900); // ms
+  const dur = mapRange(temp, 0, 100, 4200, 900);
   el.style.animationDuration = (dur/1000) + 's';
-  // horizontal start offset
   const offset = Math.round((Math.random()-0.5) * 80);
   el.style.left = (50 + offset/1.6) + '%';
   bubbles.appendChild(el);
 
-  // remove after finished
   setTimeout(()=>{ el.remove(); }, dur + 200);
 }
 
 function setupBubbles(temp, pressurePercent, viscosityIndex){
   clearBubbles();
-  // bubble frequency: hot -> more frequent. Use pressurePercent as proxy
-  // interval ms: smaller = more frequent
   const interval = Math.max(120, Math.round(mapRange(pressurePercent, 0, 100, 1400, 200)));
-  // spawn count each tick: hotter -> spawn more
   const perTick = Math.max(1, Math.round(mapRange(temp, 0, 100, 1, 4)));
 
   bubbleTimer = setInterval(()=>{
@@ -490,5 +503,6 @@ tempRange.addEventListener('input', (e)=>{
 });
 
 </script>
+
 </body>
 </html>
