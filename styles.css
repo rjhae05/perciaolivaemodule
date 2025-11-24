@@ -179,3 +179,61 @@ header {
 .fade-out {
   opacity:1 !important;
 }
+
+.labels-container {
+  width: 250px;
+  padding: 15px;
+  background: #ffffff;
+  border-radius: 14px;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+  font-family: "Poppins", sans-serif;
+}
+
+.label-title {
+  font-size: 20px;
+  font-weight: 700;
+  margin-bottom: 15px;
+  color: #333;
+}
+
+.label-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  margin-bottom: 12px;
+  background: #f9f9f9;
+  border-radius: 12px;
+  cursor: grab;
+  border: 1px solid #e0e0e0;
+  transition: 0.2s ease;
+}
+
+.label-item:hover {
+  background: #f0f0ff;
+  border-color: #b3b3ff;
+  transform: translateY(-2px);
+}
+
+.label-item img {
+  width: 32px;
+  height: 32px;
+}
+
+.reset-btn {
+  margin-top: 15px;
+  padding: 10px 20px;
+  width: 100%;
+  border: none;
+  background: #ff5c5c;
+  color: white;
+  border-radius: 10px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: 0.2s;
+}
+
+.reset-btn:hover {
+  background: #e04949;
+}
+
