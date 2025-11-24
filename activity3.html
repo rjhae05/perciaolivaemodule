@@ -3,24 +3,30 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>CSS Thermometer</title>
+<title>Volcano + Thermometer Simulation</title>
 
 <style>
 body {
   font-family: Arial, sans-serif;
-  background: #dff3d8;
+  background: #f5f5f5;
+  padding: 20px;
   text-align: center;
-  padding-top: 40px;
 }
 
-/* CONTAINER */
-.thermo-wrapper {
+/* LAYOUT */
+.main-layout {
   display: flex;
   justify-content: center;
-  gap: 50px;
+  align-items: flex-start;
+  gap: 60px;
+  margin-top: 20px;
 }
 
-/* THERMOMETER BODY */
+/* ------------------ THERMOMETER ------------------ */
+.thermo-wrapper {
+  margin-top: 40px;
+}
+
 .thermometer {
   width: 60px;
   height: 240px;
@@ -31,7 +37,6 @@ body {
   overflow: hidden;
 }
 
-/* TEMPERATURE FILL */
 .mercury {
   position: absolute;
   bottom: 0;
@@ -42,7 +47,6 @@ body {
   transition: 0.4s;
 }
 
-/* BULB */
 .bulb {
   width: 80px;
   height: 80px;
@@ -56,46 +60,239 @@ body {
   transition: 0.4s;
 }
 
-/* SLIDER */
 #tempSlider {
-  width: 300px;
-  margin-top: 40px;
+  width: 200px;
+  margin-top: 30px;
 }
+
+/* ------------------ VOLCANO ------------------ */
+.label {
+  padding: 10px 20px;
+  background: #4a6cf7;
+  color: white;
+  border-radius: 8px;
+  margin-bottom: 10px;
+  cursor: grab;
+  font-weight: bold;
+}
+
+.label:active {
+  opacity: 0.7;
+}
+
+.drop-zone {
+  width: 260px;
+  height: 260px;
+  padding: 10px;
+}
+
+.volcano {
+  position: relative;
+  width: 220px;
+  height: 200px;
+  margin: 0 auto;
+  top: 20px;
+}
+
+.mountain {
+  width: 0;
+  height: 0;
+  border-left: 110px solid transparent;
+  border-right: 110px solid transparent;
+  border-bottom: 180px solid #5a3b22;
+  position: absolute;
+  bottom: 0;
+}
+
+.crater {
+  position: absolute;
+  top: 8px;
+  left: 85px;
+  width: 50px;
+  height: 15px;
+  background: #3a2717;
+  border-radius: 50%;
+  z-index: 10;
+}
+
+.lava {
+  position: absolute;
+  top: 0;
+  left: 100px;
+  width: 20px;
+  height: 60px;
+  background: linear-gradient(orange, red);
+  border-radius: 40%;
+  transform: translateY(30px);
+  opacity: 0;
+  transition: 0.3s;
+}
+
+.smoke {
+  position: absolute;
+  top: -10px;
+  left: 105px;
+  width: 25px;
+  height: 25px;
+  background: #ccc;
+  border-radius: 50%;
+  opacity: 0;
+}
+
+.smoke.animate {
+  animation: puff 1.6s infinite;
+}
+
+@keyframes puff {
+  0% { transform: translateY(0) scale(1); opacity: 0.6; }
+  100% { transform: translateY(-45px) scale(1.8); opacity: 0; }
+}
+
+.ash {
+  position: absolute;
+  top: 0;
+  left: 95px;
+  width: 40px;
+  height: 40px;
+  background: rgba(200,200,200,0.4);
+  border-radius: 50%;
+  filter: blur(3px);
+  opacity: 0;
+}
+
+.ash.active {
+  animation: ashBurst 0.8s forwards;
+}
+
+@keyframes ashBurst {
+  0% { opacity: 1; transform: scale(0.3); }
+  100% { opacity: 0; transform: scale(2); }
+}
+
+.drop-zone.highlight {
+  outline: 3px dashed #ff9800;
+}
+
 </style>
 </head>
+
+
 <body>
 
-<h1>CSS Thermometer Simulation</h1>
-<p>Slide the temperature to see the thermometer change!</p>
+<h1>Interactive Simulation: Volcano + Temperature Effect</h1>
 
-<div class="thermo-wrapper">
-    <div class="thermometer">
-        <div class="mercury" id="mercury"></div>
-        <div class="bulb" id="bulb"></div>
+
+<div class="main-layout">
+
+    <!-- LEFT SIDE — THERMOMETER -->
+    <div class="thermo-wrapper">
+        <h2>Temperature</h2>
+        <div class="thermometer">
+            <div class="mercury" id="mercury"></div>
+            <div class="bulb" id="bulb"></div>
+        </div>
+
+        <input type="range" id="tempSlider" min="0" max="100" value="20">
+        <p id="tempValue">Temperature: 20°C</p>
     </div>
+
+
+    <!-- RIGHT SIDE — VOLCANO -->
+    <div>
+        <h2>Classify the Volcano</h2>
+
+        <div class="label" draggable="true" data-status="active">ACTIVE</div>
+        <div class="label" draggable="true" data-status="inactive">INACTIVE</div>
+
+        <div class="drop-zone" id="dropZone">
+            <div class="volcano" id="mayon">
+                <div class="mountain"></div>
+                <div class="crater"></div>
+                <div class="lava"></div>
+                <div class="smoke"></div>
+                <div class="ash"></div>
+            </div>
+        </div>
+    </div>
+
 </div>
 
-<input type="range" id="tempSlider" min="0" max="100" value="20">
 
 <script>
+/* ----------------- THERMOMETER LOGIC ----------------- */
+
 const slider = document.getElementById("tempSlider");
 const mercury = document.getElementById("mercury");
 const bulb = document.getElementById("bulb");
+const tempText = document.getElementById("tempValue");
 
 slider.addEventListener("input", () => {
     let temp = slider.value;
+    tempText.textContent = "Temperature: " + temp + "°C";
 
-    /* Height of mercury */
+    // mercury height
     mercury.style.height = temp + "%";
 
-    /* Color change from blue → red */
-    let red   = Math.floor((temp / 100) * 255);
-    let blue  = 255 - red;
+    // color transition
+    let red = Math.floor((temp / 100) * 255);
+    let blue = 255 - red;
     let color = `rgb(${red},0,${blue})`;
 
     mercury.style.background = color;
     bulb.style.background = color;
 });
+
+
+/* ----------------- DRAG & DROP FOR VOLCANO ----------------- */
+
+const labels = document.querySelectorAll(".label");
+const dropZone = document.getElementById("dropZone");
+
+labels.forEach(label => {
+  label.addEventListener("dragstart", e => {
+    e.dataTransfer.setData("status", label.dataset.status);
+    dropZone.classList.add("highlight");
+  });
+
+  label.addEventListener("dragend", () => {
+    dropZone.classList.remove("highlight");
+  });
+});
+
+dropZone.addEventListener("dragover", e => e.preventDefault());
+
+dropZone.addEventListener("drop", e => {
+  e.preventDefault();
+  const status = e.dataTransfer.getData("status");
+
+  if (status === "active") {
+    erupt("mayon");
+  } else {
+    calm("mayon");
+  }
+
+  dropZone.classList.remove("highlight");
+});
+
+/* ----------------- ERUPTION FUNCTIONS ----------------- */
+
+function erupt(id) {
+  const v = document.getElementById(id);
+  v.querySelector(".lava").classList.add("active");
+  v.querySelector(".smoke").classList.add("animate");
+  v.querySelector(".ash").classList.add("active");
+
+  setTimeout(() => {
+    v.querySelector(".ash").classList.remove("active");
+  }, 1200);
+}
+
+function calm(id) {
+  const v = document.getElementById(id);
+  v.querySelector(".lava").classList.remove("active");
+  v.querySelector(".smoke").classList.remove("animate");
+  v.querySelector(".ash").classList.remove("active");
+}
 </script>
 
 </body>
