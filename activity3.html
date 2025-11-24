@@ -459,182 +459,140 @@ function updateFromTemp(t){
   tempRange.value = t;
   dragThermo.setAttribute('aria-valuenow', String(Math.round(t)));
 
-  // viscosity
-  const viscosityIndex = 1 - (t / 100);
-  const viscLabel = viscosityIndex > 0.66 ? 'High (Thick)' : viscosityIndex < 0.33 ? 'Low (Thin)' : 'Medium';
-  viscText.textContent = viscLabel;
-  viscBadge.textContent = viscLabel;
+   const viscosityIndex = 1 - (t / 100);
 
-  // pressure
-  const pressurePercent = Math.round(mapRange(t, 0, 100, 10, 95));
-  pressureFill.style.width = pressurePercent + '%';
-  pressureFill.style.background = `linear-gradient(90deg, ${pressurePercent>60? '#f94144' : '#ffd166'}, #ff6b6b)`;
-  pressurePct.textContent = pressurePercent + '%';
-  gasText.textContent = pressurePercent > 66 ? 'High' : pressurePercent < 33 ? 'Low' : 'Medium';
+  let viscosityLabel = "Medium";
+  if (t < 30) viscosityLabel = "Thick";
+  else if (t > 70) viscosityLabel = "Thin";
 
-  // lava stem
-  const stemHeight = Math.round(mapRange(t, 0, 100, 80, 10));
-  lavaStem.style.height = stemHeight + 'px';
-  const warm = Math.round(mapRange(t, 0, 100, 120, 255));
-  lavaStem.style.background = `linear-gradient(rgb(${warm},90,20), rgb(${Math.max(0,warm-60)},20,0))`;
-  lavaStem.style.boxShadow = t > 70 ? '0 12px 36px rgba(255,90,10,0.45)' : '0 6px 18px rgba(0,0,0,0.12)';
+  viscText.textContent = viscosityLabel;
+  viscBadge.textContent = viscosityLabel;
 
-  // lava flow
-  const flowOpacity = mapRange(t, 0, 100, 0.04, 1);
-  const flowHeight = Math.round(mapRange(t, 0, 100, 36, 160));
-  const flowWidth = Math.round(mapRange(t, 0, 100, 68, 28));
-  lavaFlow.style.opacity = flowOpacity;
-  lavaFlow.style.height = flowHeight + 'px';
-  lavaFlow.style.width = flowWidth + 'px';
-  lavaFlow.style.borderRadius = Math.max(12, Math.round(flowWidth/2)) + 'px';
-  lavaFlow.style.background = `linear-gradient(#ffcf9b, rgb(${Math.min(255,warm)},80,20) 70%)`;
-  lavaFlow.style.filter = t > 60 ? 'blur(0.6px) saturate(1.1)' : 'blur(0.4px) saturate(0.95)';
+  // gas pressure
+  let pressure = t; // direct 0–100
+  gasText.textContent = pressure > 70 ? "High" : pressure < 30 ? "Low" : "Medium";
 
-  // bubbles
-  setupBubbles(t, pressurePercent, viscosityIndex);
+  pressureFill.style.width = pressure + "%";
+  pressurePct.textContent = pressure + "%";
 
-  // thermometer mercury
-  mercury.style.height = t + '%';
-  mercury.style.boxShadow = t > 75 ? "0 0 18px rgba(255,40,10,.85)" : "inset 0 0 8px rgba(0,0,0,0.25)";
+  // mercury rise
+  mercury.style.height = (t * 0.7) + "%";
 
-  // eruption trigger (only once every ~3s to avoid spam)
-  if (t >= 100 && Date.now() - lastEruptionAt > 3000) {
-    triggerEruption();
-    lastEruptionAt = Date.now();
-  }
+  // lava stem & lava flow
+  const stemHeight = mapRange(t, 0, 100, 10, 36);
+  lavaStem.style.height = stemHeight + "px";
+
+  const flowOpacity = mapRange(t, 0, 100, 0, 1);
+  const flowHeight = mapRange(t, 0, 100, 0, 120);
+
+  lavaFlow.style.opacity = flowOpacity.toFixed(2);
+  lavaFlow.style.height = flowHeight + "px";
+
+  // bubble rate
+  if (bubbleTimer) clearInterval(bubbleTimer);
+  const interval = mapRange(t, 0, 100, 1500, 240);
+  bubbleTimer = setInterval(spawnBubble, interval);
+
+  // eruption trigger
+  if (pressure > 90) triggerEruption();
 }
 
 // ---------------------- bubbles ----------------------
-function clearBubbles(){
-  if (bubbleTimer) { clearInterval(bubbleTimer); bubbleTimer = null; }
-  bubbles.innerHTML = '';
+function spawnBubble(){
+  const b = document.createElement('div');
+  b.className = 'bubble';
+
+  const size = Math.random() * 12 + 10;
+  b.style.width = size + "px";
+  b.style.height = size + "px";
+
+  const dist = (Math.random() - 0.5) * 60;
+  b.style.left = `calc(50% + ${dist}px)`;
+
+  const rise = Math.random() * 120 + 80;
+  const duration = Math.random() * 1 + 1.4;
+
+  b.style.animation = `bubbleRise ${duration}s linear forwards`;
+
+  b.addEventListener('animationend', () => b.remove());
+
+  bubbles.appendChild(b);
 }
 
-function spawnBubble(temp) {
-  const el = document.createElement('div');
-  el.className = 'bubble';
-  const size = Math.round(mapRange(temp, 0, 100, 16, 6));
-  el.style.width = size + 'px';
-  el.style.height = size + 'px';
-  const drift = (Math.random() - 0.5) * 80;
-  el.style.setProperty('--drift', Math.round(drift) + 'px');
-  const dur = mapRange(temp, 0, 100, 4200, 900);
-  el.style.animationDuration = (dur/1000) + 's';
-  const offset = (Math.random()-0.5) * 100;
-  el.style.left = (50 + offset/1.6) + '%';
-  el.style.opacity = 0.95;
-  bubbles.appendChild(el);
-  setTimeout(()=> el.remove(), dur + 300);
-}
-
-function setupBubbles(temp, pressurePercent, viscosityIndex){
-  clearBubbles();
-  // interval inversely proportional to pressure
-  const interval = Math.max(90, Math.round(mapRange(pressurePercent, 0, 100, 1400, 160)));
-  const perTick = Math.max(1, Math.round(mapRange(temp, 0, 100, 1, 5)));
-  bubbleTimer = setInterval(()=> {
-    for (let i=0;i<perTick;i++) spawnBubble(temp);
-  }, interval);
-}
+// bubble animation keyframes
+const styleSheet = document.createElement("style");
+styleSheet.textContent = `
+@keyframes bubbleRise {
+  0%   { transform: translateY(0) scale(1); opacity: 1; }
+  100% { transform: translateY(-160px) scale(1.6); opacity: 0; }
+}`;
+document.head.appendChild(styleSheet);
 
 // ---------------------- eruption ----------------------
 function triggerEruption(){
-  // screen shake on vizPanel
-  vizPanel.style.animation = 'shake 0.8s ease';
-  setTimeout(()=> vizPanel.style.animation = '', 820);
+  const now = Date.now();
+  if (now - lastEruptionAt < 2000) return; // cooldown
+  lastEruptionAt = now;
 
-  // burst + ash
-  const burst = document.createElement('div');
-  burst.className = 'eruption-burst';
-  document.body.appendChild(burst);
+  vizPanel.style.animation = "shake 0.6s ease";
 
-  const ash = document.createElement('div');
-  ash.className = 'ash-cloud';
-  document.body.appendChild(ash);
+  const burst = document.createElement("div");
+  burst.className = "eruption-burst";
 
-  // animate extra lava flare (quick flash + expand)
-  lavaFlow.style.opacity = 1;
-  lavaFlow.style.height = Math.max(180, parseInt(lavaFlow.style.height || '120')) + 'px';
-  lavaFlow.style.transition = 'height .6s ease, opacity .2s';
+  const ash = document.createElement("div");
+  ash.className = "ash-cloud";
 
-  setTimeout(()=> {
+  vizPanel.appendChild(burst);
+  vizPanel.appendChild(ash);
+
+  setTimeout(() => {
     burst.remove();
     ash.remove();
-    // relax lava flow back a bit
-    lavaFlow.style.height = Math.max(120, parseInt(lavaFlow.style.height || '120') - 80) + 'px';
+    vizPanel.style.animation = "";
   }, 1800);
 }
 
-// ---------------------- thermometer dragging ----------------------
-let dragging = false;
+// ---------------------- DRAGGABLE THERMOMETER ----------------------
+let isDragging = false;
 
-function pointerDown(e){
-  e.preventDefault();
-  dragging = true;
-  dragThermo.classList.add('dragging');
-  // capture pointer if available
-  if (e.target.setPointerCapture) try { e.target.setPointerCapture(e.pointerId); } catch(e){}
-  handlePointerMove(e);
-}
-function pointerUp(e){
-  dragging = false;
-  dragThermo.classList.remove('dragging');
-  if (e.target.releasePointerCapture) try { e.target.releasePointerCapture(e.pointerId); } catch(e){}
-}
-function handlePointerMove(e){
-  if (!dragging && e.type !== 'keydown') return;
-  // thermometer bounding rect
-  const rect = dragThermo.getBoundingClientRect();
-  // compute y relative handle (pointer or keyboard)
-  let clientY;
-  if (e.type === 'keydown') clientY = null;
-  else if (e.touches) clientY = e.touches[0].clientY;
-  else clientY = (e.clientY !== undefined ? e.clientY : e.pageY);
+dragThermo.addEventListener("mousedown", startDrag);
+dragThermo.addEventListener("touchstart", startDrag);
 
-  let percent;
-  if (e.type === 'keydown') {
-    // keyboard control: ArrowUp / ArrowDown handled separately
-    return;
-  } else {
-    const relative = clientY - rect.top;
-    percent = 100 - Math.round((relative / rect.height) * 100);
-  }
-
-  percent = Math.max(0, Math.min(100, percent));
-  updateFromTemp(percent);
+function startDrag(e){
+  isDragging = true;
+  dragThermo.classList.add("dragging");
+  document.addEventListener("mousemove", onDragMove);
+  document.addEventListener("touchmove", onDragMove);
+  document.addEventListener("mouseup", endDrag);
+  document.addEventListener("touchend", endDrag);
 }
 
-// keyboard support
-dragThermo.addEventListener('keydown', (ev)=>{
-  const cur = Number(tempRange.value);
-  if (ev.key === 'ArrowUp' || ev.key === 'ArrowRight') {
-    updateFromTemp(Math.min(100, cur + 2));
-    ev.preventDefault();
-  } else if (ev.key === 'ArrowDown' || ev.key === 'ArrowLeft') {
-    updateFromTemp(Math.max(0, cur - 2));
-    ev.preventDefault();
-  } else if (ev.key === 'Home') { updateFromTemp(0); ev.preventDefault(); }
-  else if (ev.key === 'End') { updateFromTemp(100); ev.preventDefault(); }
-});
+function onDragMove(e){
+  if (!isDragging) return;
 
-// pointer (mouse/touch) handlers
-dragThermo.addEventListener('pointerdown', pointerDown);
-window.addEventListener('pointerup', pointerUp);
-window.addEventListener('pointermove', (e)=> { if (dragging) handlePointerMove(e); });
+  const panelRect = vizPanel.getBoundingClientRect();
+  const thermoRect = dragThermo.getBoundingClientRect();
 
-// touch fallback
-dragThermo.addEventListener('touchstart', (e)=>{ pointerDown(e); }, {passive:false});
-window.addEventListener('touchend', (e)=>{ pointerUp(e); }, {passive:false});
-window.addEventListener('touchmove', (e)=>{ if (dragging) handlePointerMove(e); }, {passive:false});
+  const y = (e.touches ? e.touches[0].clientY : e.clientY) - panelRect.top;
+  let pct = 1 - (y / panelRect.height);
 
-// also update when the hidden input changes (keyboard/assistive tech)
-tempRange.addEventListener('input', (e)=>{
-  updateFromTemp(Number(e.target.value));
-});
+  pct = Math.max(0, Math.min(1, pct));
+  updateFromTemp(Math.round(pct * 100));
+}
 
-// initialize
-updateFromTemp(Number(tempRange.value));
+function endDrag(){
+  isDragging = false;
+  dragThermo.classList.remove("dragging");
+  document.removeEventListener("mousemove", onDragMove);
+  document.removeEventListener("touchmove", onDragMove);
+  document.removeEventListener("mouseup", endDrag);
+  document.removeEventListener("touchend", endDrag);
+}
+
+// ---------------------- INIT ----------------------
+updateFromTemp(50);
 </script>
 
 </body>
 </html>
+
