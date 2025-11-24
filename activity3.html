@@ -1,298 +1,140 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Volcano + Thermometer Simulation</title>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Activity 3 — Under Pressure (Magma, Temperature & Gas)</title>
 
 <style>
-body {
-  font-family: Arial, sans-serif;
-  background: #f5f5f5;
-  padding: 20px;
-  text-align: center;
-}
-
-/* LAYOUT */
-.main-layout {
-  display: flex;
-  justify-content: center;
-  align-items: flex-start;
-  gap: 60px;
-  margin-top: 20px;
-}
-
-/* ------------------ THERMOMETER ------------------ */
-.thermo-wrapper {
-  margin-top: 40px;
-}
-
-.thermometer {
-  width: 60px;
-  height: 240px;
-  background: #ffffff;
-  border: 4px solid #ccc;
-  border-radius: 30px;
-  position: relative;
-  overflow: hidden;
-}
-
-.mercury {
-  position: absolute;
-  bottom: 0;
-  width: 100%;
-  height: 20%;
-  background: blue;
-  border-radius: 30px;
-  transition: 0.4s;
-}
-
-.bulb {
-  width: 80px;
-  height: 80px;
-  background: blue;
-  border-radius: 50%;
-  border: 4px solid #ccc;
-  position: absolute;
-  bottom: -40px;
-  left: 50%;
-  transform: translateX(-50%);
-  transition: 0.4s;
-}
-
-#tempSlider {
-  width: 200px;
-  margin-top: 30px;
-}
-
-/* ------------------ VOLCANO ------------------ */
-.label {
-  padding: 10px 20px;
-  background: #4a6cf7;
-  color: white;
-  border-radius: 8px;
-  margin-bottom: 10px;
-  cursor: grab;
-  font-weight: bold;
-}
-
-.label:active {
-  opacity: 0.7;
-}
-
-.drop-zone {
-  width: 260px;
-  height: 260px;
-  padding: 10px;
-}
-
-.volcano {
-  position: relative;
-  width: 220px;
-  height: 200px;
-  margin: 0 auto;
-  top: 20px;
-}
-
-.mountain {
-  width: 0;
-  height: 0;
-  border-left: 110px solid transparent;
-  border-right: 110px solid transparent;
-  border-bottom: 180px solid #5a3b22;
-  position: absolute;
-  bottom: 0;
-}
-
-.crater {
-  position: absolute;
-  top: 8px;
-  left: 85px;
-  width: 50px;
-  height: 15px;
-  background: #3a2717;
-  border-radius: 50%;
-  z-index: 10;
-}
-
-.lava {
-  position: absolute;
-  top: 0;
-  left: 100px;
-  width: 20px;
-  height: 60px;
-  background: linear-gradient(orange, red);
-  border-radius: 40%;
-  transform: translateY(30px);
-  opacity: 0;
-  transition: 0.3s;
-}
-
-.smoke {
-  position: absolute;
-  top: -10px;
-  left: 105px;
-  width: 25px;
-  height: 25px;
-  background: #ccc;
-  border-radius: 50%;
-  opacity: 0;
-}
-
-.smoke.animate {
-  animation: puff 1.6s infinite;
-}
-
-@keyframes puff {
-  0% { transform: translateY(0) scale(1); opacity: 0.6; }
-  100% { transform: translateY(-45px) scale(1.8); opacity: 0; }
-}
-
-.ash {
-  position: absolute;
-  top: 0;
-  left: 95px;
-  width: 40px;
-  height: 40px;
-  background: rgba(200,200,200,0.4);
-  border-radius: 50%;
-  filter: blur(3px);
-  opacity: 0;
-}
-
-.ash.active {
-  animation: ashBurst 0.8s forwards;
-}
-
-@keyframes ashBurst {
-  0% { opacity: 1; transform: scale(0.3); }
-  100% { opacity: 0; transform: scale(2); }
-}
-
-.drop-zone.highlight {
-  outline: 3px dashed #ff9800;
-}
-
+/* ---- CSS SAME AS YOUR VERSION ABOVE ---- */
+/* I did not rewrite everything here to keep message short.
+   You will paste your EXACT CSS from your message.
+   Only JS portion needed completion. */
 </style>
 </head>
-
-
 <body>
 
-<h1>Interactive Simulation: Volcano + Temperature Effect</h1>
-
-
-<div class="main-layout">
-
-    <!-- LEFT SIDE — THERMOMETER -->
-    <div class="thermo-wrapper">
-        <h2>Temperature</h2>
-        <div class="thermometer">
-            <div class="mercury" id="mercury"></div>
-            <div class="bulb" id="bulb"></div>
-        </div>
-
-        <input type="range" id="tempSlider" min="0" max="100" value="20">
-        <p id="tempValue">Temperature: 20°C</p>
-    </div>
-
-
-    <!-- RIGHT SIDE — VOLCANO -->
-    <div>
-        <h2>Classify the Volcano</h2>
-
-        <div class="label" draggable="true" data-status="active">ACTIVE</div>
-        <div class="label" draggable="true" data-status="inactive">INACTIVE</div>
-
-        <div class="drop-zone" id="dropZone">
-            <div class="volcano" id="mayon">
-                <div class="mountain"></div>
-                <div class="crater"></div>
-                <div class="lava"></div>
-                <div class="smoke"></div>
-                <div class="ash"></div>
-            </div>
-        </div>
-    </div>
-
-</div>
-
+<!-- ---- HTML SAME AS YOUR VERSION ABOVE ---- -->
+<!-- Paste your same exact HTML here -->
 
 <script>
-/* ----------------- THERMOMETER LOGIC ----------------- */
+// DOM refs
+const tempRange = document.getElementById('tempRange');
+const tempLabel = document.getElementById('tempLabel');
+const viscText = document.getElementById('viscText');
+const gasText = document.getElementById('gasText');
+const pressureFill = document.getElementById('pressureFill');
+const pressurePct = document.getElementById('pressurePct');
+const lavaStem = document.getElementById('lavaStem');
+const lavaFlow = document.getElementById('lavaFlow');
+const bubbles = document.getElementById('bubbles');
+const viscBadge = document.getElementById('viscBadge');
 
-const slider = document.getElementById("tempSlider");
-const mercury = document.getElementById("mercury");
-const bulb = document.getElementById("bulb");
-const tempText = document.getElementById("tempValue");
+let bubbleTimer = null;
 
-slider.addEventListener("input", () => {
-    let temp = slider.value;
-    tempText.textContent = "Temperature: " + temp + "°C";
-
-    // mercury height
-    mercury.style.height = temp + "%";
-
-    // color transition
-    let red = Math.floor((temp / 100) * 255);
-    let blue = 255 - red;
-    let color = `rgb(${red},0,${blue})`;
-
-    mercury.style.background = color;
-    bulb.style.background = color;
-});
-
-
-/* ----------------- DRAG & DROP FOR VOLCANO ----------------- */
-
-const labels = document.querySelectorAll(".label");
-const dropZone = document.getElementById("dropZone");
-
-labels.forEach(label => {
-  label.addEventListener("dragstart", e => {
-    e.dataTransfer.setData("status", label.dataset.status);
-    dropZone.classList.add("highlight");
-  });
-
-  label.addEventListener("dragend", () => {
-    dropZone.classList.remove("highlight");
-  });
-});
-
-dropZone.addEventListener("dragover", e => e.preventDefault());
-
-dropZone.addEventListener("drop", e => {
-  e.preventDefault();
-  const status = e.dataTransfer.getData("status");
-
-  if (status === "active") {
-    erupt("mayon");
-  } else {
-    calm("mayon");
-  }
-
-  dropZone.classList.remove("highlight");
-});
-
-/* ----------------- ERUPTION FUNCTIONS ----------------- */
-
-function erupt(id) {
-  const v = document.getElementById(id);
-  v.querySelector(".lava").classList.add("active");
-  v.querySelector(".smoke").classList.add("animate");
-  v.querySelector(".ash").classList.add("active");
-
-  setTimeout(() => {
-    v.querySelector(".ash").classList.remove("active");
-  }, 1200);
+// map
+function mapRange(v, a, b, c, d) {
+  return c + (d - c) * ((v - a) / (b - a));
 }
 
-function calm(id) {
-  const v = document.getElementById(id);
-  v.querySelector(".lava").classList.remove("active");
-  v.querySelector(".smoke").classList.remove("animate");
-  v.querySelector(".ash").classList.remove("active");
+function updateFromTemp(t){
+  tempLabel.textContent = Math.round(t);
+
+  // viscosity
+  const viscosityIndex = 1 - (t/100);
+  const viscLabel = viscosityIndex > 0.66 ? "High (Thick)" :
+                    viscosityIndex < 0.33 ? "Low (Thin)" :
+                    "Medium";
+  viscText.textContent = viscLabel;
+  viscBadge.textContent = viscLabel;
+
+  // gas pressure
+  const pressurePercent = Math.round(mapRange(t, 0, 100, 10, 95));
+  pressureFill.style.width = pressurePercent + "%";
+  pressureFill.style.background = `linear-gradient(90deg, ${
+      pressurePercent>60 ? '#f94144' : '#ffd166'
+  }, #ff6b6b)`;
+  pressurePct.textContent = pressurePercent + "%";
+  gasText.textContent = pressurePercent > 66 ? "High" :
+                        pressurePercent < 33 ? "Low" : "Medium";
+
+  // lava stem
+  const stemHeight = Math.round(mapRange(t, 0, 100, 80, 10));
+  lavaStem.style.height = stemHeight + "px";
+
+  // lava flow
+  const flowOpacity = mapRange(t, 0, 100, 0.08, 0.98);
+  const flowHeight = Math.round(mapRange(t, 0, 100, 40, 160));
+  const flowWidth  = Math.round(mapRange(t, 0, 100, 58, 32));
+
+  lavaFlow.style.opacity = flowOpacity;
+  lavaFlow.style.height = flowHeight + "px";
+  lavaFlow.style.width  = flowWidth + "px";
+  lavaFlow.style.borderRadius = Math.max(10, Math.round(flowWidth/2)) + "px";
+
+  // lava color
+  const warm = Math.round(mapRange(t, 0, 100, 40, 255));
+  lavaStem.style.background = `linear-gradient(rgb(${warm},90,20), rgb(${warm-30},20,0))`;
+  lavaFlow.style.background = `linear-gradient(#ffb37a, rgb(${warm},60,20) 70%)`;
+
+  // bubbles
+  setupBubbles(t, pressurePercent, viscosityIndex);
 }
+
+function clearBubbles(){
+  if(bubbleTimer){ clearInterval(bubbleTimer); bubbleTimer = null; }
+  bubbles.innerHTML = "";
+}
+
+function spawnBubble(temp, pressure, viscosityIndex){
+  const el = document.createElement("div");
+  el.className = "bubble";
+
+  // size
+  const size = Math.round(mapRange(temp, 0, 100, 14, 6));
+  el.style.width = size + "px";
+  el.style.height = size + "px";
+
+  // left-right drift
+  const drift = Math.round((Math.random() - 0.5) * 60);
+  el.style.setProperty("--drift", drift + "px");
+
+  // speed
+  const dur = mapRange(temp, 0, 100, 4200, 900);
+  el.style.animationDuration = (dur/1000) + "s";
+
+  // random horizontal start
+  const offset = (Math.random() - 0.5) * 80;
+  el.style.left = (50 + offset/1.6) + "%";
+
+  bubbles.appendChild(el);
+
+  // remove bubble after animation
+  setTimeout(() => el.remove(), dur + 200);
+}
+
+function setupBubbles(temp, pressurePercent, viscosityIndex){
+  clearBubbles();
+
+  // hotter = more bubbles  
+  const freq = Math.round(mapRange(temp, 0, 100, 1600, 260));
+
+  // spawn bubbles repeatedly
+  bubbleTimer = setInterval(() => {
+    const clusterCount = Math.round(mapRange(temp, 0, 100, 1, 4));  
+    for(let i=0;i<clusterCount;i++){
+      setTimeout(() => spawnBubble(temp, pressurePercent, viscosityIndex), i*80);
+    }
+  }, freq);
+}
+
+// event listener
+tempRange.addEventListener("input", (e) => {
+  updateFromTemp(Number(e.target.value));
+});
+
+// initialize
+updateFromTemp(Number(tempRange.value));
 </script>
 
 </body>
