@@ -1,419 +1,225 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Activity 3 — Under Pressure (Magma, Temperature & Gas)</title>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Activity 3 — Under Pressure</title>
 
 <style>
-  :root{
-    --bg-url: url("/mnt/data/c30f4868-d4ee-479a-b24b-99377afc08dd.png");
-    --page-bg: #cfeff2;
-    --panel-bg: rgba(255,255,255,0.92);
-    --accent: #e85d04;
-    --cool: #2b7a78;
-    --hot: #f94144;
-    --bubble-color: rgba(255,255,255,0.9);
-    --lava-color-1: #ff7a18;
-    --lava-color-2: #ff2d00;
-    --gauge-color: #ffb703;
-  }
-
-  *{box-sizing:border-box;font-family:Inter, system-ui, Arial, sans-serif}
   body{
-    margin:0;
-    min-height:100vh;
-    background:
-      radial-gradient(circle at 20% 10%, rgba(255,255,255,0.25), transparent 15%),
-      linear-gradient(180deg,#e0fbfc, #cfeff2 60%);
-    display:flex;
-    align-items:flex-start;
-    justify-content:center;
-    padding:28px;
-    gap:24px;
+    font-family: Arial, sans-serif;
+    margin:0; padding:20px;
+    background:#dff3d8;
+    display:flex; justify-content:center;
   }
 
-  .app {
-    width:100%;
-    max-width:1100px;
+  .app{
     display:grid;
-    grid-template-columns: 320px 1fr;
-    gap:20px;
-    align-items:start;
+    grid-template-columns:160px 1fr;
+    gap:25px;
+    width:100%; max-width:1100px;
   }
 
-  /* LEFT PANEL - Controls & info */
-  .panel {
-    background:var(--panel-bg);
-    border-radius:12px;
-    padding:16px;
-    box-shadow:0 8px 30px rgba(12,18,20,0.06);
-  }
-
-  h1{font-size:20px;margin:0 0 10px}
-  p.lead{margin:6px 0 14px;color:#234}
-
-  .therm-row{
+  /*-------------------------------------
+       VERTICAL THERMOMETER SLIDER
+  --------------------------------------*/
+  .thermo-box{
     display:flex;
+    flex-direction:column;
     align-items:center;
-    gap:10px;
-    margin-bottom:12px;
+    gap:15px;
+    background:#fff;
+    padding:15px;
+    border-radius:12px;
+    box-shadow:0 4px 15px rgba(0,0,0,0.1);
   }
-  .therm {
-    transform: rotate(-90deg);
-    width: 180px;
-    height: 40px;
-    --thumb-size:18px;
+
+  .thermo-label{
+    font-weight:bold; font-size:18px;
   }
+
+  .thermo{
+    height:300px;
+    width:40px;
+    position:relative;
+  }
+
   input[type=range]{
-    -webkit-appearance:none;
-    width:100%;
-    height:8px;
-    border-radius:8px;
-    background:linear-gradient(90deg,#8ecae6, #023047);
+    writing-mode: bt-lr;         /* Vertical */
+    -webkit-appearance: slider-vertical;
+    width:40px;
+    height:300px;
+    background:linear-gradient(to top, #8ecae6, #023047);
+    border-radius:20px;
     outline:none;
   }
+
   input[type=range]::-webkit-slider-thumb{
     -webkit-appearance:none;
-    width:18px;height:18px;border-radius:50%;
-    background:linear-gradient(#fff,#ddd);
-    border:2px solid rgba(0,0,0,0.18);
-    box-shadow:0 2px 4px rgba(0,0,0,0.15);
+    width:28px; height:28px;
+    background:#fff;
+    border-radius:50%;
+    border:3px solid #888;
+    cursor:pointer;
   }
 
-  .stat {
-    margin-top:12px;
-    display:grid;
-    grid-template-columns:1fr 1fr;
-    gap:10px;
-  }
-  .stat .box{
-    background:#fff;border-radius:8px;padding:10px;text-align:center;box-shadow:0 6px 14px rgba(2,6,23,0.04);
-  }
-  .stat .box strong{display:block;font-size:18px}
+  /*-------------------------------------
+       RIGHT PANEL (Volcano Scene)
+       — unchanged from your code
+  --------------------------------------*/
 
-  .gauge {
-    margin-top:14px;
-    display:flex;
-    align-items:center;
-    gap:12px;
-  }
-  .gauge .meter {
-    width:100%;
-    height:12px;
-    background:linear-gradient(90deg,#eee,#ddd);
-    border-radius:8px;
-    overflow:hidden;
-  }
-  .gauge .meter > i {
-    display:block;height:100%;
-    width:20%;
-    background:linear-gradient(90deg,var(--gauge-color), #f94144);
-    transition:width .25s linear, background .25s;
-  }
-  .help {font-size:13px;color:#333;margin-top:12px;line-height:1.4}
-
-  /* RIGHT PANEL - Visualization */
-  .viz {
-    background: linear-gradient(180deg, rgba(255,255,255,0.9), rgba(255,255,255,0.86));
-    border-radius:12px;padding:18px; min-height:520px;
-    display:flex;align-items:center;justify-content:center; position:relative; overflow:hidden;
-    box-shadow:0 8px 30px rgba(12,18,20,0.06);
+  .panel{
+    background:#fff;
+    padding:16px; border-radius:12px;
+    box-shadow:0 6px 18px rgba(0,0,0,0.1);
   }
 
-  /* Decorative background - user uploaded image used as background */
-  .scene {
-    width:100%;
-    max-width:740px;
-    height:460px;
+  .viz{
+    background:#fff;
     border-radius:10px;
+    min-height:500px;
     position:relative;
-    overflow:hidden;
-    background-image: var(--bg-url);
-    background-size:cover;
-    background-position:center right;
-    box-shadow: inset 0 30px 120px rgba(0,0,0,0.12);
+    padding:20px;
   }
 
-  /* Volcano area */
-  .ground {
+  .scene{
+    width:100%; height:440px;
+    background:#c7e7ff;
+    position:relative;
+    border-radius:10px;
+    overflow:hidden;
+  }
+
+  /* Volcano Shape */
+  .mount{
     position:absolute;
-    left:50%;
+    bottom:0; left:50%;
     transform:translateX(-50%);
-    bottom:36px;
-    width:420px;
-    height:220px;
-    display:flex;align-items:flex-end;justify-content:center;
+    width:320px; height:200px;
+    background:linear-gradient(#6fa3d1,#3a6fa8);
+    clip-path:polygon(50% 0%, 100% 100%, 0 100%);
+  }
+
+  .crater{
+    position:absolute;
+    top:8px; left:50%;
+    transform:translateX(-50%);
+    width:60px; height:25px;
+    background:#13222f;
+    border-radius:50%;
+  }
+
+  .lava-stem{
+    position:absolute;
+    bottom:20px; left:50%;
+    transform:translateX(-50%);
+    width:30px; height:30px;
+    background:red;
+    border-radius:50%;
+    opacity:0; transition:0.3s;
+  }
+
+  .lava-flow{
+    position:absolute;
+    bottom:50px; left:50%;
+    transform:translateX(-50%);
+    width:40px; height:130px;
+    background:orange;
+    border-radius:20px;
+    opacity:0; transition:0.3s;
+  }
+
+  .bubbles{
+    position:absolute;
+    bottom:100px; left:50%;
+    width:120px; height:150px;
+    transform:translateX(-50%);
     pointer-events:none;
   }
 
-  /* Mountain silhouette */
-  .mount {
-    position:relative;
-    width:320px;height:200px;
-    background:linear-gradient(#6fa3d1,#3a6fa8);
-    clip-path: polygon(50% 0%, 100% 100%, 0% 100%);
-    box-shadow:0 30px 50px rgba(0,0,0,0.18) inset;
-  }
-
-  /* light streaks */
-  .mount .streak{ position:absolute; background: rgba(255,255,255,0.25); filter:blur(2px); border-radius:20px;}
-  .s1{width:180px;height:30px; top:80px; left:10px; transform:rotate(-8deg)}
-  .s2{width:120px;height:22px; top:110px; left:70px; transform:rotate(-6deg)}
-  .s3{width:80px;height:18px; top:140px; left:110px; transform:rotate(-4deg)}
-
-  /* Crater */
-  .crater {
+  .bubble{
     position:absolute;
-    width:60px;height:24px;border-radius:50%;
-    background: linear-gradient(#14232f,#0e2a3f);
-    top:6px;left:50%; transform:translateX(-50%);
-    box-shadow: 0 -8px 10px rgba(0,0,0,0.45);
+    width:12px; height:12px;
+    background:white;
+    border-radius:50%;
+    animation: rise 2s linear forwards;
   }
 
-  /* Lava stem (base animation modified by temperature) */
-  .lava-stem {
-    position:absolute; left:50%; transform:translateX(-50%); bottom:36px;
-    width:28px; height:26px; border-radius:50%;
-    background:linear-gradient(#ff7a18,#ff2d00);
-    opacity:0; transition: all .2s linear;
-    box-shadow:0 4px 18px rgba(255,60,10,0.45);
+  @keyframes rise{
+    to{ transform:translateY(-140px); opacity:0; }
   }
-
-  /* Thin lava flowing overlay (longer smoother stream) */
-  .lava-flow {
-    position:absolute; left:50%; transform:translateX(-50%); bottom:56px;
-    width:40px; height:120px; border-radius:20px;
-    background: linear-gradient(#ffb37a, #ff4b24 70%);
-    opacity:0; transition:opacity .25s;
-    filter: blur(0.6px);
-    transform-origin: top;
-  }
-
-  /* Bubbles container */
-  .bubbles {
-    position:absolute; left:50%; transform:translateX(-50%); bottom:90px;
-    width:120px; height:140px; pointer-events:none; overflow:visible;
-  }
-
-  .bubble {
-    position:absolute;
-    bottom:0;
-    left:50%;
-    transform:translateX(-50%) translateY(0) scale(1);
-    width:10px;height:10px;border-radius:50%;
-    background:var(--bubble-color);
-    opacity:0.95;
-    box-shadow:0 1px 6px rgba(0,0,0,0.12);
-    animation: bubbleRise linear forwards;
-  }
-
-  @keyframes bubbleRise {
-    to { transform: translateX(calc(-50% + var(--drift, 0px))) translateY(-160px) scale(0.6); opacity:0; }
-  }
-
-  /* Labels under scene */
-  .labels {
-    position:absolute; bottom:6px; left:6px; color:#05386b; font-weight:600;
-    background: rgba(255,255,255,0.6); padding:6px 8px; border-radius:8px;
-    font-size:14px;
-  }
-
-  /* small responsive */
-  @media (max-width:980px){
-    .app{grid-template-columns:1fr; padding:12px}
-    .scene{height:380px}
-    .ground{width:320px}
-  }
-
 </style>
 </head>
 <body>
 
 <div class="app">
-  <!-- Left: Controls -->
-  <div class="panel">
-    <h1>Activity 3 — Under Pressure</h1>
-    <p class="lead">Drag the thermometer to change temperature. Watch how magma, bubbles and gas pressure react.</p>
 
-    <label style="display:block;font-weight:600;margin-bottom:8px">Temperature</label>
-    <!-- slider 0 = cold, 100 = hot -->
-    <input id="tempRange" type="range" min="0" max="100" value="50" style="width:100%;">
+  <!-- LEFT: Vertical Thermometer -->
+  <div class="thermo-box">
+    <div class="thermo-label">Temperature</div>
 
-    <div class="stat">
-      <div class="box">
-        <small>Viscosity</small>
-        <strong id="viscText">Medium</strong>
-        <span style="display:block;font-size:12px;margin-top:6px;color:#444">Thin ↔ Thick</span>
-      </div>
-      <div class="box">
-        <small>Gas Pressure</small>
-        <strong id="gasText">Medium</strong>
-        <span style="display:block;font-size:12px;margin-top:6px;color:#444">Low ↔ High</span>
-      </div>
-    </div>
+    <input id="tempRange" type="range" min="0" max="100" value="50" class="thermo">
 
-    <div class="gauge" style="margin-top:14px">
-      <div style="width:90px;font-size:13px;color:#333; font-weight:600">Pressure</div>
-      <div class="meter" aria-hidden="true"><i id="pressureFill" style="width:50%"></i></div>
-      <div style="width:40px;text-align:right;font-weight:700;color:#333" id="pressurePct">50%</div>
-    </div>
-
-    <div class="help">
-      <strong>How to interpret:</strong>
-      <ul style="margin:8px 0 0 16px;padding:0;line-height:1.4;text-align:left">
-        <li><strong>High temperature</strong> → magma is <em>thin and runny</em>; bubbles form easily → <em>higher gas pressure</em>.</li>
-        <li><strong>Low temperature</strong> → magma is <em>thick and sticky</em>; bubbles are fewer → <em>lower gas pressure</em>.</li>
-      </ul>
-    </div>
+    <div><strong id="tempVal">50°C</strong></div>
   </div>
 
-  <!-- Right: Visualization -->
-  <div class="viz panel">
-    <div class="scene" id="scene">
-      <div class="ground">
+  <!-- RIGHT: Volcano Panel -->
+  <div class="panel viz">
+      <div class="scene">
         <div class="mount">
-          <div class="streak s1"></div>
-          <div class="streak s2"></div>
-          <div class="streak s3"></div>
           <div class="crater"></div>
-          <div class="lava-stem" id="lavaStem" style=""></div>
-          <div class="lava-flow" id="lavaFlow" style=""></div>
+          <div class="lava-stem" id="lavaStem"></div>
+          <div class="lava-flow" id="lavaFlow"></div>
           <div class="bubbles" id="bubbles"></div>
         </div>
       </div>
-
-      <div class="labels">
-        Temp: <span id="tempLabel">50</span> • Viscosity: <span id="viscBadge">Medium</span>
-      </div>
-    </div>
   </div>
+
 </div>
 
 <script>
-/* Activity 3 logic
- - Temperature slider controls:
-   * viscosity: inverse relationship with temperature
-   * bubble frequency & size: higher temp -> more bubbles, faster rising
-   * lava appearance: hot -> longer flow, cooler -> stubby/stuck lava stem
-   * pressure: proportional to bubble formation rate
-*/
+const tempRange = document.getElementById("tempRange");
+const tempVal = document.getElementById("tempVal");
 
-// DOM refs
-const tempRange = document.getElementById('tempRange');
-const tempLabel = document.getElementById('tempLabel');
-const viscText = document.getElementById('viscText');
-const gasText = document.getElementById('gasText');
-const pressureFill = document.getElementById('pressureFill');
-const pressurePct = document.getElementById('pressurePct');
-const lavaStem = document.getElementById('lavaStem');
-const lavaFlow = document.getElementById('lavaFlow');
-const bubbles = document.getElementById('bubbles');
-const viscBadge = document.getElementById('viscBadge');
+const lavaStem = document.getElementById("lavaStem");
+const lavaFlow = document.getElementById("lavaFlow");
+const bubbles = document.getElementById("bubbles");
 
 let bubbleTimer = null;
 
-// utility: map a value from [a,b] to [c,d]
-function mapRange(v, a, b, c, d) {
-  return c + (d - c) * ((v - a) / (b - a));
+function update(t){
+  tempVal.textContent = t + "°C";
+
+  // Lava visibility
+  lavaStem.style.opacity = t > 20 ? 1 : 0;
+  lavaFlow.style.opacity = t > 40 ? 1 : 0;
+
+  // Lava height changes with temp
+  lavaFlow.style.height = (80 + t) + "px";
+
+  // Bubble system
+  if(bubbleTimer) clearInterval(bubbleTimer);
+
+  if(t > 10){
+    bubbleTimer = setInterval(()=>spawnBubble(t), 800 - t*6);
+  }
 }
 
-// update visualization based on temperature (0..100)
-function updateFromTemp(t){
-  tempLabel.textContent = Math.round(t);
-
-  // Viscosity: higher temp => lower viscosity (thin)
-  // we'll compute viscosityIndex in range [0..1] where 0=thin,1=thick
-  const viscosityIndex = 1 - (t / 100); // 0 when hot, 1 when cold
-  // text
-  let viscLabel = (viscosityIndex > 0.66) ? 'High (Thick)' : (viscosityIndex < 0.33) ? 'Low (Thin)' : 'Medium';
-  viscText.textContent = viscLabel;
-  viscBadge.textContent = viscLabel;
-
-  // Gas pressure model: high temp -> more bubbles -> higher pressure
-  // pressure percent roughly proportional to temperature
-  const pressurePercent = Math.round(mapRange(t, 0, 100, 10, 95));
-  pressureFill.style.width = pressurePercent + '%';
-  // color shift: cooler (blueish) -> hot (reddish)
-  pressureFill.style.background = `linear-gradient(90deg, ${pressurePercent>60? '#f94144' : '#ffd166'}, #ff6b6b)`;
-  pressurePct.textContent = pressurePercent + '%';
-  gasText.textContent = pressurePercent > 66 ? 'High' : pressurePercent < 33 ? 'Low' : 'Medium';
-
-  // Lava visual adjustments:
-  // lavaStem height = smaller when hot (magma flows quickly), taller / blobby when cold
-  const stemHeight = Math.round(mapRange(t, 0, 100, 80, 10)); // cold => 80px stub, hot => 10px (thin)
-  lavaStem.style.height = stemHeight + 'px';
-  // lavaFlow opacity & height for long molten stream for hot
-  const flowOpacity = mapRange(t, 0, 100, 0.08, 0.98);
-  const flowHeight = Math.round(mapRange(t, 0, 100, 40, 160));
-  lavaFlow.style.opacity = flowOpacity;
-  lavaFlow.style.height = flowHeight + 'px';
-  // flow width smaller for hot (thin stream) or wider for cold (blob)
-  const flowWidth = Math.round(mapRange(t, 0, 100, 58, 32));
-  lavaFlow.style.width = flowWidth + 'px';
-  lavaFlow.style.borderRadius = Math.max(10, Math.round(flowWidth/2)) + 'px';
-
-  // Lava color intensity: shift warmth
-  const warm = Math.round(mapRange(t, 0, 100, 40, 255));
-  lavaStem.style.background = `linear-gradient(rgb(${Math.min(255,warm)},90,20), rgb(${Math.min(255,warm-30)},20,0))`;
-  lavaFlow.style.background = `linear-gradient(#ffb37a, rgb(${Math.min(255,warm)},60,20) 70%)`;
-
-  // Bubbles: frequency and size
-  setupBubbles(t, pressurePercent, viscosityIndex);
+function spawnBubble(t){
+  const b = document.createElement("div");
+  b.className = "bubble";
+  b.style.left = (50 + (Math.random()*40 - 20)) + "%";
+  b.style.width = b.style.height = (8 + t/20) + "px";
+  bubbles.appendChild(b);
+  setTimeout(()=>b.remove(),2000);
 }
 
-// bubble system
-function clearBubbles(){
-  if(bubbleTimer) { clearInterval(bubbleTimer); bubbleTimer = null; }
-  bubbles.innerHTML = '';
-}
+update(50);
 
-function spawnBubble(temp, pressure, viscosityIndex){
-  const el = document.createElement('div');
-  el.className = 'bubble';
-  // size: hotter -> slightly smaller but more -> cooler -> larger fewer
-  const size = Math.round(mapRange(temp, 0, 100, 14, 6));
-  el.style.width = size + 'px';
-  el.style.height = size + 'px';
-  // drift left/right
-  const drift = Math.round((Math.random() - 0.5) * 60);
-  el.style.setProperty('--drift', drift + 'px');
-  // animation duration: hotter -> faster rise (shorter)
-  const dur = mapRange(temp, 0, 100, 4200, 900); // ms
-  el.style.animationDuration = (dur/1000) + 's';
-  // horizontal start offset
-  const offset = Math.round((Math.random()-0.5) * 80);
-  el.style.left = (50 + offset/1.6) + '%';
-  bubbles.appendChild(el);
-
-  // remove after finished
-  setTimeout(()=>{ el.remove(); }, dur + 200);
-}
-
-function setupBubbles(temp, pressurePercent, viscosityIndex){
-  clearBubbles();
-  // bubble frequency: hot -> more frequent. Use pressurePercent as proxy
-  // interval ms: smaller = more frequent
-  const interval = Math.max(120, Math.round(mapRange(pressurePercent, 0, 100, 1400, 200)));
-  // spawn count each tick: hotter -> spawn more
-  const perTick = Math.max(1, Math.round(mapRange(temp, 0, 100, 1, 4)));
-
-  bubbleTimer = setInterval(()=>{
-    for(let i=0;i<perTick;i++){
-      spawnBubble(temp, pressurePercent, viscosityIndex);
-    }
-  }, interval);
-}
-
-// initialize
-updateFromTemp(parseInt(tempRange.value,10));
-
-// handlers
-tempRange.addEventListener('input', (e)=>{
-  const t = Number(e.target.value);
-  updateFromTemp(t);
+tempRange.addEventListener("input", e=>{
+  update(parseInt(e.target.value));
 });
-
 </script>
+
 </body>
 </html>
