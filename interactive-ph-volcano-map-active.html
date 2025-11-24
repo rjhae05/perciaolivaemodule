@@ -1,0 +1,257 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Interactive Volcano Map — Philippines</title>
+
+  <!-- Leaflet CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+
+  <!-- MarkerCluster CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css" />
+
+  <style>
+    html, body { margin:0; padding:0; height:100%; }
+    #map { height:100vh; width:100%; }
+    body { font-family: Arial, sans-serif; }
+
+    .controls {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      z-index: 1000;
+      background: white;
+      padding: 8px;
+      border-radius: 6px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+      width: 220px;
+    }
+    .controls input[type="text"] { width: 100%; padding:6px; margin-top:6px; }
+    .controls label { display:block; margin-top:8px; font-size:13px; }
+    .legend {
+      position: absolute;
+      bottom: 20px;
+      left: 10px;
+      z-index: 1000;
+      background: white;
+      padding: 10px;
+      border-radius: 6px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+      font-size: 14px;
+      line-height: 20px;
+    }
+    .legend div { display: flex; align-items: center; margin-bottom: 6px; }
+    .legend span { width: 14px; height: 14px; border-radius: 50%; margin-right: 6px; display: inline-block; }
+    .btn { margin-top:6px; display:inline-block; padding:6px 8px; border-radius:4px; cursor:pointer; background:#eee; }
+  </style>
+</head>
+
+<body>
+  <div id="map"></div>
+
+  <div class="controls">
+    <strong>Search / Filters</strong>
+    <input id="vsearch" type="text" placeholder="Search volcano name (Enter)" />
+    <label>
+      <input type="checkbox" id="showActive" checked /> Show Active
+    </label>
+
+    <div style="margin-top:8px;">
+      <button id="zoomAll" class="btn">Zoom to All</button>
+      <button id="clearSearch" class="btn">Clear Search</button>
+    </div>
+  </div>
+
+  <div class="legend">
+    <strong>Volcano Status</strong>
+    <div><span style="background:#d93025;"></span> Active</div>
+   
+  </div>
+
+  <!-- Leaflet JS -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+  <!-- MarkerCluster JS -->
+  <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
+
+  <script>
+    // ---------- MAP SETUP ----------
+    const map = L.map('map').setView([12.0, 123.0], 6);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      maxZoom: 19,
+      attribution: '© OpenStreetMap'
+    }).addTo(map);
+
+    // ---------- COLOR / ICON ----------
+    function getColor(status) {
+      if (status === "Active") return "#d93025";
+      if (status === "Potentially Active") return "#f57f17";
+      return "#546e7a";
+    }
+
+    // ---------- DATA ARRAYS ----------
+    // NOTE: Replace / paste the FULL arrays here (all 380 items).
+    // Format per item: { name: "Mayon Volcano", lat: 13.257, lng: 123.685 }
+    // --- Sample entries (you will replace these with full arrays) ---
+
+    const activeVolcanoes = [
+      { name: "Mayon Volcano", lat: 13.257, lng: 123.685 },
+      { name: "Taal Volcano", lat: 14.002, lng: 120.993 },
+      { name: "Mount Pinatubo", lat: 15.142, lng: 120.354 },
+      { name: "Bulusan", lat: 12.7699, lng: 124.0542 },
+      { name: "Kanlaon", lat: 10.5232, lng: 123.2503 },
+      { name: "Smith Volcano (Babuyan)", lat: 19.5339, lng: 121.9169 },
+      { name: "Didicas", lat: 19.0770, lng: 122.2019 },
+      { name: "Hibok-hibok (Camiguin)", lat: 9.1119, lng: 124.4597 },
+      { name: "Ambalatungan (Mount Binuluan)", lat: 17.3062, lng: 121.0939 },
+      { name: "Biliran (Anas)", lat: 11.5581, lng: 124.5120 },
+      { name: "Bud Dajo", lat: 6.01295, lng: 121.05772 },
+      { name: "Cabalian", lat: 10.286, lng: 125.2218 },
+      { name: "Cagua", lat: 18.2219, lng: 122.1231 },
+      { name: "Camiguin de Babuyanes", lat: 18.83, lng: 121.86 },
+      { name: "Iraya", lat: 20.4689, lng: 122.0100 },
+      { name: "Iriga (Ragay)", lat: 13.4570, lng: 123.4570 },
+      { name: "Isarog", lat: 13.65685, lng: 123.38087 },
+      { name: "Leonard Kniaseff", lat: 7.3820, lng: 126.0470 },
+      { name: "Makaturing", lat: 7.647, lng: 124.320 },
+      { name: "Matutum", lat: 6.3667, lng: 125.0667 },
+      { name: "Musuan (Calayo)", lat: 7.8769, lng: 125.0681 },
+      { name: "Parker (Mount Parker)", lat: 6.1130, lng: 124.8897 },
+      { name: "Ragang", lat: 7.7, lng: 124.5 },
+      
+     
+    ];
+
+
+    /* ----------------------------------------------------------------------
+       IMPORTANT:
+       Replace the three arrays above (activeVolcanoes, potentialVolcanoes, inactiveVolcanoes)
+       with the FULL lists (all 380 items) in the same format:
+       [
+         { name: "Volcano name", lat: 12.345, lng: 123.456 },
+         ...
+       ]
+       ---------------------------------------------------------------------- */
+
+    // ---------- MERGE INTO ONE LIST WITH STATUS ----------
+    function withStatus(list, status) {
+      return list.map(v => ({ name: v.name, lat: v.lat, lng: v.lng, status }));
+    }
+
+    const volcanoes = [
+      ...withStatus(activeVolcanoes, "Active"),
+      ...withStatus(potentialVolcanoes, "Potentially Active"),
+      ...withStatus(inactiveVolcanoes, "Inactive")
+    ];
+
+    // ---------- MARKER CLUSTERS ----------
+    const markerLayer = L.markerClusterGroup();
+    const markerRefs = []; // keep refs for search/focus
+
+    function addMarkers() {
+      markerLayer.clearLayers();
+      markerRefs.length = 0;
+
+      volcanoes.forEach(v => {
+        // Do not add marker if the corresponding filter is unchecked
+        if (v.status === "Active" && !document.getElementById('showActive').checked) return;
+        if (v.status === "Potentially Active" && !document.getElementById('showPotential').checked) return;
+        if (v.status === "Inactive" && !document.getElementById('showInactive').checked) return;
+
+        const marker = L.circleMarker([v.lat, v.lng], {
+          radius: 7,
+          color: getColor(v.status),
+          fillColor: getColor(v.status),
+          fillOpacity: 0.9,
+          weight: 1
+        });
+
+        marker.bindPopup(`<strong>${v.name}</strong><br/><em>${v.status}</em>`);
+        markerLayer.addLayer(marker);
+        markerRefs.push({ volcano: v, marker });
+      });
+
+      map.addLayer(markerLayer);
+    }
+
+    // initial add
+    addMarkers();
+
+    // ---------- FILTER TOGGLES ----------
+    document.getElementById('showActive').addEventListener('change', addMarkers);
+    document.getElementById('showPotential').addEventListener('change', addMarkers);
+    document.getElementById('showInactive').addEventListener('change', addMarkers);
+
+    // ---------- SEARCH ----------
+    function searchVolcano(query) {
+      const q = (query || '').trim().toLowerCase();
+      if (!q) { alert("Type a volcano name and press Enter."); return; }
+
+      const found = volcanoes.find(v => v.name.toLowerCase().includes(q));
+      if (!found) {
+        alert("Volcano not found. Try a simpler name like 'Mayon' or 'Taal'.");
+        return;
+      }
+
+      // ensure filters show the found volcano
+      if (found.status === "Active") document.getElementById('showActive').checked = true;
+      if (found.status === "Potentially Active") document.getElementById('showPotential').checked = true;
+      if (found.status === "Inactive") document.getElementById('showInactive').checked = true;
+      addMarkers();
+
+      map.setView([found.lat, found.lng], 11);
+      L.popup()
+        .setLatLng([found.lat, found.lng])
+        .setContent(`<h3>${found.name}</h3><p><strong>Status:</strong> ${found.status}</p>`)
+        .openOn(map);
+    }
+
+    document.getElementById('vsearch').addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') searchVolcano(e.target.value);
+    });
+
+    document.getElementById('clearSearch').addEventListener('click', () => {
+      document.getElementById('vsearch').value = '';
+      map.closePopup();
+    });
+
+    // ---------- ZOOM TO ALL ----------
+    document.getElementById('zoomAll').addEventListener('click', () => {
+      if (markerLayer.getLayers().length === 0) return;
+      const group = L.featureGroup(markerLayer.getLayers());
+      map.fitBounds(group.getBounds().pad(0.25));
+    });
+
+    // ---------- HELPER: load external JSON (optional) ----------
+    // If you have a file volcanoes.json formatted like:
+    // [ { "name":"Mayon", "lat":13.257, "lng":123.685, "status":"Active" }, ... ]
+    // you can call loadExternalJSON('/path/to/volcanoes.json') to populate.
+    async function loadExternalJSON(url) {
+      try {
+        const res = await fetch(url);
+        if (!res.ok) throw new Error("Failed to fetch " + url);
+        const data = await res.json();
+        // split into arrays (optional)
+        const a = data.filter(d => d.status === 'Active').map(d => ({ name: d.name, lat: d.lat, lng: d.lng }));
+        const p = data.filter(d => d.status === 'Potentially Active').map(d => ({ name: d.name, lat: d.lat, lng: d.lng }));
+        const i = data.filter(d => d.status === 'Inactive').map(d => ({ name: d.name, lat: d.lat, lng: d.lng }));
+        // replace arrays and redraw
+        activeVolcanoes.length = 0; activeVolcanoes.push(...a);
+        potentialVolcanoes.length = 0; potentialVolcanoes.push(...p);
+        inactiveVolcanoes.length = 0; inactiveVolcanoes.push(...i);
+
+        // rebuild combined list
+        volcanoes.length = 0;
+        volcanoes.push(...withStatus(activeVolcanoes, "Active"), ...withStatus(potentialVolcanoes, "Potentially Active"), ...withStatus(inactiveVolcanoes, "Inactive"));
+        addMarkers();
+        alert("Loaded volcanoes from " + url);
+      } catch (err) {
+        console.error(err);
+        alert("Error loading external JSON: " + err.message);
+      }
+    }
+  </script>
+</body>
+</html>
