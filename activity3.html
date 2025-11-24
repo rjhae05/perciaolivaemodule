@@ -366,142 +366,189 @@
 </div>
 
 <script>
-/* Activity 3 logic
- - Temperature slider controls:
-   * viscosity: inverse relationship with temperature
-   * bubble frequency & size: higher temp -> more bubbles, faster rising
-   * lava appearance: hot -> longer flow, cooler -> stubby/stuck lava stem
-   * pressure: proportional to bubble formation rate
-*/
-
-// DOM refs
+// ---------------------------------------------------
+// DOM REFERENCES
+// ---------------------------------------------------
 const tempRange = document.getElementById('tempRange');
 const tempLabel = document.getElementById('tempLabel');
+
 const viscText = document.getElementById('viscText');
 const gasText = document.getElementById('gasText');
+
 const pressureFill = document.getElementById('pressureFill');
 const pressurePct = document.getElementById('pressurePct');
+
 const lavaStem = document.getElementById('lavaStem');
 const lavaFlow = document.getElementById('lavaFlow');
+
 const bubbles = document.getElementById('bubbles');
 const viscBadge = document.getElementById('viscBadge');
 
-/* NEW thermometer ref */
+// Classic thermometer
 const mercury = document.getElementById('classicMercury');
 
+// bubble timer
 let bubbleTimer = null;
 
-// utility: map a value from [a,b] to [c,d]
+
+// ---------------------------------------------------
+// UTILITY: Map number range to another range
+// ---------------------------------------------------
 function mapRange(v, a, b, c, d) {
   return c + (d - c) * ((v - a) / (b - a));
 }
 
-// update visualization based on temperature (0..100)
+
+// ---------------------------------------------------
+// MAIN UPDATE FUNCTION
+// ---------------------------------------------------
 function updateFromTemp(t){
   tempLabel.textContent = Math.round(t);
 
-  // Viscosity
-  const viscosityIndex = 1 - (t / 100);
-  let viscLabel = (viscosityIndex > 0.66) ? 'High (Thick)' :
-                  (viscosityIndex < 0.33) ? 'Low (Thin)' : 'Medium';
+  // -----------------------------
+  // 1. VISCOSITY LOGIC
+  // -----------------------------
+  const viscosityIndex = 1 - (t / 100); // 0=thin, 1=thick
+
+  let viscLabel =
+    viscosityIndex > 0.66 ? 'High (Thick)' :
+    viscosityIndex < 0.33 ? 'Low (Thin)' :
+    'Medium';
+
   viscText.textContent = viscLabel;
   viscBadge.textContent = viscLabel;
 
-  // Pressure
+  // -----------------------------
+  // 2. GAS PRESSURE LOGIC
+  // -----------------------------
   const pressurePercent = Math.round(mapRange(t, 0, 100, 10, 95));
+
   pressureFill.style.width = pressurePercent + '%';
   pressureFill.style.background =
     `linear-gradient(90deg, ${pressurePercent>60? '#f94144' : '#ffd166'}, #ff6b6b)`;
+
   pressurePct.textContent = pressurePercent + '%';
-  gasText.textContent = pressurePercent > 66 ? 'High' :
-                        pressurePercent < 33 ? 'Low' : 'Medium';
 
-  /* ----------------------------------------------- */
-  /* ✔ CLASSIC THERMOMETER UPDATE (ADDED HERE)       */
-  /* ----------------------------------------------- */
+  gasText.textContent =
+    pressurePercent > 66 ? 'High' :
+    pressurePercent < 33 ? 'Low' :
+    'Medium';
 
-  // Convert 0–100 into mercury height
-  const mercuryHeight = t + "%";
-  mercury.style.height = mercuryHeight;
-
-  // Glow on high temp
-  if (t > 75) {
-      mercury.style.boxShadow = "0 0 15px rgba(255,0,0,.8)";
-  } else {
-      mercury.style.boxShadow = "inset 0 0 8px rgba(0,0,0,0.5)";
-  }
-
-  /* ----------------------------------------------- */
-  /* END OF THERMOMETER UPDATE                       */
-  /* ----------------------------------------------- */
-
-  // Lava visuals
+  // -----------------------------
+  // 3. LAVA STEM LOGIC
+  // -----------------------------
   const stemHeight = Math.round(mapRange(t, 0, 100, 80, 10));
   lavaStem.style.height = stemHeight + 'px';
 
-  const flowOpacity = mapRange(t, 0, 100, 0.08, 0.98);
-  const flowHeight = Math.round(mapRange(t, 0, 100, 40, 160));
-  lavaFlow.style.opacity = flowOpacity;
-  lavaFlow.style.height = flowHeight + 'px';
-
-  const flowWidth = Math.round(mapRange(t, 0, 100, 58, 32));
-  lavaFlow.style.width = flowWidth + 'px';
-  lavaFlow.style.borderRadius = Math.max(10, Math.round(flowWidth/2)) + 'px';
-
+  // lava color warmth
   const warm = Math.round(mapRange(t, 0, 100, 40, 255));
   lavaStem.style.background =
-    `linear-gradient(rgb(${Math.min(255,warm)},90,20), rgb(${Math.min(255,warm-30)},20,0))`;
-  lavaFlow.style.background =
-    `linear-gradient(#ffb37a, rgb(${Math.min(255,warm)},60,20) 70%)`;
+    `linear-gradient(rgb(${warm},90,20), rgb(${warm-30},20,0))`;
 
-  // Bubbles
+  // -----------------------------
+  // 4. LAVA FLOW LOGIC
+  // -----------------------------
+  const flowOpacity = mapRange(t, 0, 100, 0.08, 0.98);
+  const flowHeight = Math.round(mapRange(t, 0, 100, 40, 160));
+  const flowWidth = Math.round(mapRange(t, 0, 100, 58, 32));
+  lavaFlow.style.opacity = flowOpacity;
+  lavaFlow.style.height = flowHeight + 'px';
+  lavaFlow.style.width = flowWidth + 'px';
+  lavaFlow.style.borderRadius =
+    Math.max(10, Math.round(flowWidth/2)) + 'px';
+
+  lavaFlow.style.background =
+    `linear-gradient(#ffb37a, rgb(${warm},60,20) 70%)`;
+
+  // -----------------------------
+  // 5. BUBBLES
+  // -----------------------------
   setupBubbles(t, pressurePercent, viscosityIndex);
+
+  // -----------------------------
+  // 6. CLASSIC THERMOMETER
+  // -----------------------------
+  const mercuryHeight = t + "%";
+  mercury.style.height = mercuryHeight;
+
+  // glow on high temp
+  mercury.style.boxShadow =
+    t > 75
+      ? "0 0 15px rgba(255,0,0,.8)"
+      : "inset 0 0 8px rgba(0,0,0,0.5)";
 }
 
-// bubble system
+
+// ---------------------------------------------------
+// BUBBLE SYSTEM
+// ---------------------------------------------------
 function clearBubbles(){
-  if(bubbleTimer) { clearInterval(bubbleTimer); bubbleTimer = null; }
+  if(bubbleTimer){
+    clearInterval(bubbleTimer);
+    bubbleTimer = null;
+  }
   bubbles.innerHTML = '';
 }
 
 function spawnBubble(temp, pressure, viscosityIndex){
   const el = document.createElement('div');
   el.className = 'bubble';
+
+  // bubble size
   const size = Math.round(mapRange(temp, 0, 100, 14, 6));
   el.style.width = size + 'px';
   el.style.height = size + 'px';
+
+  // drift left/right
   const drift = Math.round((Math.random() - 0.5) * 60);
   el.style.setProperty('--drift', drift + 'px');
+
+  // speed
   const dur = mapRange(temp, 0, 100, 4200, 900);
   el.style.animationDuration = (dur/1000) + 's';
+
+  // bubble starting position
   const offset = Math.round((Math.random()-0.5) * 80);
   el.style.left = (50 + offset/1.6) + '%';
+
   bubbles.appendChild(el);
 
-  setTimeout(()=>{ el.remove(); }, dur + 200);
+  // remove when done
+  setTimeout(() => el.remove(), dur + 200);
 }
 
 function setupBubbles(temp, pressurePercent, viscosityIndex){
   clearBubbles();
-  const interval = Math.max(120, Math.round(mapRange(pressurePercent, 0, 100, 1400, 200)));
-  const perTick = Math.max(1, Math.round(mapRange(temp, 0, 100, 1, 4)));
 
-  bubbleTimer = setInterval(()=>{
+  const interval = Math.max(120,
+    Math.round(mapRange(pressurePercent, 0, 100, 1400, 200))
+  );
+
+  const perTick = Math.max(1,
+    Math.round(mapRange(temp, 0, 100, 1, 4))
+  );
+
+  bubbleTimer = setInterval(() => {
     for(let i=0;i<perTick;i++){
       spawnBubble(temp, pressurePercent, viscosityIndex);
     }
   }, interval);
 }
 
-// initialize
-updateFromTemp(parseInt(tempRange.value,10));
 
-// handlers
-tempRange.addEventListener('input', (e)=>{
+// ---------------------------------------------------
+// INITIALIZE
+// ---------------------------------------------------
+updateFromTemp(parseInt(tempRange.value, 10));
+
+
+// ---------------------------------------------------
+// EVENT LISTENER
+// ---------------------------------------------------
+tempRange.addEventListener('input', e => {
   const t = Number(e.target.value);
   updateFromTemp(t);
 });
-
 </script>
 
 </body>
