@@ -120,15 +120,53 @@
     display:flex;align-items:center;justify-content:center; position:relative; overflow:hidden;
     box-shadow:0 8px 30px rgba(12,18,20,0.06);
   }
-  #volcanoImg {
+
+
+#volcanoImg {
   position: absolute;
-  bottom: 0;
+  bottom: -80px; /* ibinaba ko ng 20px */
   left: 50%;
   transform: translateX(-50%);
-  width: 420px;      /* adjust size as needed */
+  width: 420px;
+  height: auto;
+  pointer-events: none;
+  z-index: 1;
+}
+
+
+#eruptionGif {
+  position: absolute;
+  bottom: -80px;              /* adjust kung gusto mong ibaba/itaas */
+  left: 50%;
+  transform: translateX(-50%);
+  width: 420px;               /* SAME width = SAME size */
   height: auto;
   pointer-events: none;
   z-index: 10;
+}
+
+
+/* Lava should be ABOVE the volcano */
+#lavaStem,
+#lavaFlow,
+#bubbles {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 5; /* mas mataas */
+}
+
+/* Keep individual lava positioning */
+#lavaStem {
+  bottom: 36px;
+}
+
+#lavaFlow {
+  bottom: 50px;
+}
+
+#bubbles {
+  bottom: 90px;
 }
 /* Hide the old shape if still present */
 .mount {
@@ -271,7 +309,7 @@
 /* Mercury that rises */
 .classic-mercury {
   position: absolute;
-  bottom: 25px; /* leaves space for bottom bulb */
+  bottom: 0px; /* leaves space for bottom bulb */
   width: 100%;
   height: 0%;
   background: #c70000;
@@ -279,6 +317,17 @@
   transition: height 0.4s ease;
   box-shadow: inset 0 0 8px rgba(0,0,0,0.5);
 }
+#mercuryBottom {
+  position: absolute;
+  bottom: 5px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  z-index: 5;
+}
+
 
 /* Bottom bulb */
 .classic-bulb {
@@ -286,7 +335,7 @@
   bottom: -10px;
   width: 55px;
   height: 55px;
-  background: #d10000;
+  
   border: 4px solid #999;
   border-radius: 50%;
   box-shadow: inset 0 0 10px rgba(0,0,0,0.6);
@@ -366,7 +415,11 @@
     <div class="scene" id="scene">
       <div class="ground">
       <div class="mount">
-          <img id="volcanoImg" src="https://rjhae05.github.io/perciaolivaemodule/assets/Volcano.png" alt="Volcano" />
+          <img id="volcanoImg" src="../assets/Volcano-open.png" alt="Volcano" />
+          
+          <img id="eruptionGif" src="../assets/Volcano_Explotion.gif"
+     style="display:none;">
+
           <div class="lava-stem" id="lavaStem"></div>
           <div class="lava-flow" id="lavaFlow"></div>
           <div class="bubbles" id="bubbles"></div>
@@ -413,13 +466,49 @@ function mapRange(v, a, b, c, d) {
   return c + (d - c) * ((v - a) / (b - a));
 }
 
+// GIF eruption image
+const eruptionGif = document.getElementById('eruptionGif');
+const volcanoImg = document.getElementById('volcanoImg');
+
+// --- SHOW GIF when temp ≥ 95% ---
+function handleEruptionGif(temp) {
+  if (temp >= 95) {
+    eruptionGif.style.display = "block";   // show GIF
+    volcanoImg.style.opacity = "0";        // hide static volcano
+  } else {
+    eruptionGif.style.display = "none";    // hide GIF
+    volcanoImg.style.opacity = "1";        // show volcano
+  }
+}
 
 // ---------------------------------------------------
 // MAIN UPDATE FUNCTION
 // ---------------------------------------------------
 function updateFromTemp(t){
   tempLabel.textContent = Math.round(t);
+// Thermometer color logic
+// CLASSIC THERMOMETER
 
+// Thermometer color logic
+if (t <= 35) {
+    mercury.style.background = "#1d4ed8";   // BLUE
+} else if (t <= 70) {
+    mercury.style.background = "#f59e0b";   // ORANGE
+} else {
+    mercury.style.background = "#c70000";   // RED
+}
+
+// --- FIX: Minimum mercury height (so 0% still shows color) ---
+let adjustedHeight = t;
+if (t <= 1) adjustedHeight = 8; // 8% minimum
+
+mercury.style.height = adjustedHeight + "%";
+
+// Glow on high temp
+mercury.style.boxShadow =
+  t > 75
+    ? "0 0 15px rgba(255,0,0,.8)"
+    : "inset 0 0 8px rgba(0,0,0,0.5)";
   // -----------------------------
   // 1. VISCOSITY LOGIC
   // -----------------------------
@@ -491,6 +580,8 @@ function updateFromTemp(t){
     t > 75
       ? "0 0 15px rgba(255,0,0,.8)"
       : "inset 0 0 8px rgba(0,0,0,0.5)";
+
+      handleEruptionGif(t);
 }
 
 
