@@ -1,0 +1,447 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Activity 5 — In & Out: Volcano Slope Simulator</title>
+<style>
+  :root{
+    --bg: #eef6fb;
+    --panel: #ffffff;
+    --muted: #596a72;
+    --accent: #ff6b3d;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+    background: var(--bg);
+    color: #1e2933;
+    padding: 18px;
+    min-height: 100vh;
+  }
+
+  /* Container */
+  .container {
+    max-width: 1400px;
+    margin: 0 auto;
+    width: 100%;
+  }
+
+  header { text-align:center; margin-bottom:10px; }
+  header h1 { margin:0; font-size:clamp(18px, 4vw, 24px); }
+  header p { margin:6px 0 0; color:var(--muted); font-size:clamp(12px, 2.5vw, 14px); }
+
+  .layout {
+    display: grid;
+    grid-template-columns: minmax(300px, 380px) 1fr;
+    gap: clamp(12px, 3vw, 18px);
+    margin-top: clamp(12px, 3vw, 16px);
+  }
+
+  /* Controls panel */
+  .panel {
+    background:var(--panel);
+    padding:clamp(12px, 3vw, 16px);
+    border-radius:12px;
+    box-shadow: 0 10px 30px rgba(16,24,40,0.06);
+  }
+  .panel h2 { margin:0 0 6px; font-size:clamp(14px, 3vw, 16px); }
+  .control-row { margin:clamp(8px, 2vw, 10px) 0; }
+  label { display:block; font-weight:600; margin-bottom:6px; font-size:clamp(12px, 2.5vw, 13px); }
+  input[type="range"] { width:100%; }
+  .small { font-size:clamp(11px, 2vw, 12px); color:var(--muted); margin-top:6px; }
+  .preset-row { display:flex; gap:clamp(6px, 1.5vw, 8px); margin-top:8px; flex-wrap: wrap; }
+  .btn {
+    background:#fff; border:1px solid #e6eef6; padding:clamp(6px, 1.5vw, 8px) clamp(8px, 2vw, 10px); 
+    border-radius:8px; cursor:pointer; font-size:clamp(12px, 2.5vw, 13px);
+    flex: 1;
+    min-width: 70px;
+  }
+  .btn.primary { background: var(--accent); color:#fff; border-color:transparent; }
+  .status { margin-top:10px; display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
+
+  /* Simulation stage */
+  .stage {
+    background: linear-gradient(#e9f3fb, #f9fbff);
+    border-radius:12px;
+    padding:clamp(12px, 3vw, 16px);
+    position:relative;
+    min-height:clamp(300px, 50vh, 520px);
+    box-shadow: 0 10px 30px rgba(20,40,60,0.04);
+    overflow:hidden;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+  }
+
+  /* ground */
+  .ground {
+    position:absolute; left:0; right:0; bottom:0; 
+    height:clamp(60px, 12vh, 110px);
+    background: linear-gradient(#5aa84a, #2f6d2e);
+    border-top-left-radius:48px; border-top-right-radius:48px;
+    box-shadow: inset 0 4px 12px rgba(0,0,0,0.12);
+    z-index: 2;
+  }
+
+  /* volcano images */
+  .volcano-image {
+    max-width: 90%;
+    max-height: 70%;
+    object-fit: contain;
+    z-index: 3;
+    position: relative;
+    bottom: -35px;
+  }
+
+
+/* Individual sizes */
+.shield-img {
+  max-width: 85%;
+  max-height: 65%;
+}
+
+.composite-img {
+width: 700px !important;
+height: 500px !important;
+object-fit: contain;
+position: relative;
+bottom: -20px;
+}
+
+.cinder-img {
+  max-width: 70%;
+  max-height: 60%;
+}
+
+  /* small legend */
+  .legend { font-size:clamp(12px, 2.5vw, 13px); color:var(--muted); margin-top:8px; }
+
+  /* Responsive Breakpoints */
+  @media (max-width: 1024px) {
+    .layout {
+      grid-template-columns: minmax(280px, 350px) 1fr;
+      gap: 12px;
+    }
+  }
+
+  @media (max-width: 768px){
+    .layout { 
+      grid-template-columns: 1fr;
+      gap: 12px;
+    }
+
+    @media (max-width: 480px) {
+  .shield-img { max-width: 90%; }
+  .composite-img { max-width: 80%; }
+  .cinder-img { max-width: 75%; }
+}
+    
+    .panel {
+      order: 2;
+    }
+    
+    .stage {
+      order: 1;
+      min-height: clamp(250px, 40vh, 400px);
+    }
+    
+    .preset-row {
+      justify-content: center;
+    }
+    
+    .btn {
+      flex: 0 1 auto;
+      min-width: 90px;
+    }
+  }
+
+  @media (max-width: 480px){
+    body {
+      padding: 12px 8px;
+    }
+    
+    .container {
+      padding: 0 4px;
+    }
+    
+    .stage {
+      min-height: clamp(200px, 35vh, 350px);
+      padding: 10px;
+    }
+    
+    .ground {
+      height: clamp(50px, 10vh, 80px);
+    }
+    
+    .status {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 4px;
+    }
+    
+    .preset-row {
+      gap: 4px;
+    }
+    
+    .btn {
+      min-width: 80px;
+      padding: 6px 8px;
+    }
+  }
+
+  @media (max-width: 360px){
+    .stage {
+      min-height: clamp(180px, 30vh, 300px);
+    }
+    
+    .panel {
+      padding: 10px;
+    }
+    
+    header h1 {
+      font-size: 16px;
+    }
+    
+    header p {
+      font-size: 11px;
+    }
+  }
+
+</style>
+</head>
+<body>
+<div class="container">
+  <header>
+    <h1>Activity 5 — In & Out: Volcano Slope Simulator</h1>
+    <p>More realistic volcano types — drag sliders or use presets.</p>
+  </header>
+
+  <div class="layout">
+    <!-- Controls -->
+    <aside class="panel">
+      <h2>Controls</h2>
+
+      <div class="control-row">
+        <label for="slope">Slope angle (°) — visual slope of cone: <span id="slope-display">6°</span></label>
+        <input id="slope" type="range" min="2" max="40" value="6">
+        <div class="small">Shield ≈ 2–10°, Composite ≈ 10–30°, Cinder ≈ 30–40°</div>
+      </div>
+
+      <div class="control-row">
+        <label for="viscosity">Viscosity (1 = runny → 100 = sticky)</label>
+        <input id="viscosity" type="range" min="1" max="100" value="10">
+        <div class="small">Lower viscosity → faster, fluid lava. Higher viscosity → slower, explosive tendency.</div>
+      </div>
+
+      <div class="control-row">
+        <label for="supply">Magma supply rate (0–100)</label>
+        <input id="supply" type="range" min="0" max="100" value="70">
+        <div class="small">Higher supply = longer/more intense lava flow and stronger plume when explosive.</div>
+      </div>
+
+      <div class="control-row">
+        <label for="gas">Gas content (0–100)</label>
+        <input id="gas" type="range" min="0" max="100" value="8">
+        <div class="small">Gas trapped in sticky magma increases explosivity (more ash).</div>
+      </div>
+
+      <div class="preset-row">
+        <button class="btn" id="preset-shield">Shield (6°)</button>
+        <button class="btn" id="preset-composite">Composite (20°)</button>
+        <button class="btn" id="preset-cinder">Cinder (35°)</button>
+      </div>
+
+      <div class="status">
+        <div class="legend">Type: <strong id="vol-type">Shield</strong></div>
+        <div class="legend">Emission: <strong id="emit-type">Effusive (lava)</strong></div>
+        <div class="legend">Lava speed: <strong id="lava-speed">Fast</strong></div>
+      </div>
+    </aside>
+
+    <!-- Stage -->
+    <section class="stage" id="stage">
+      <img src="https://images.unsplash.com/photo-1615753780184-672ae447f7e9?w=400&h=300&fit=crop&crop=center" alt="Shield Volcano" class="volcano-image" id="volcano-image">
+      <div class="ground"></div>
+
+      
+    </section>
+  </div>
+</div>
+
+<script>
+/*
+  Volcano Simulator with Images
+  - Uses real volcano images instead of animations
+  - Slope affects which volcano image is displayed
+  - Simple and responsive design
+*/
+
+const slopeInput = document.getElementById('slope');
+const viscInput = document.getElementById('viscosity');
+const supplyInput = document.getElementById('supply');
+const gasInput = document.getElementById('gas');
+
+const presetShield = document.getElementById('preset-shield');
+const presetComposite = document.getElementById('preset-composite');
+const presetCinder = document.getElementById('preset-cinder');
+
+const slopeDisplay = document.getElementById('slope-display');
+const volTypeLabel = document.getElementById('vol-type');
+const emitTypeLabel = document.getElementById('emit-type');
+const lavaSpeedLabel = document.getElementById('lava-speed');
+
+const volcanoImage = document.getElementById('volcano-image');
+
+
+function updateVolcanoImage(slope) {
+  if (slope <= 10) {
+    volcanoImage.src = volcanoImages.shield;
+    volcanoImage.alt = "Shield Volcano";
+  viscInput.value = 10;
+  supplyInput.value = 70;
+  gasInput.value = 8;
+    volcanoImage.className = "volcano-image shield-img";
+    volTypeLabel.textContent = "Shield";
+    emitTypeLabel.textContent = "Effusive (lava)";
+  }
+  else if (slope <= 30) {
+    volcanoImage.src = volcanoImages.composite;
+    volcanoImage.alt = "Composite Volcano";
+  viscInput.value = 60;
+  supplyInput.value = 40;
+  gasInput.value = 50;
+    volcanoImage.className = "volcano-image composite-img";
+    volTypeLabel.textContent = "Composite";
+    emitTypeLabel.textContent = "Effusive (lava)";
+  }
+  else {
+    volcanoImage.src = volcanoImages.cinder;
+    volcanoImage.alt = "Cinder Cone Volcano";
+
+    volcanoImage.className = "volcano-image cinder-img";
+    volTypeLabel.textContent = "Cinder Cone";
+    emitTypeLabel.textContent = "Explosive (ash)";
+  }
+}
+// Volcano image URLs (using Unsplash placeholder images)
+const volcanoImages = {
+  shield: '../assets/shield.gif',
+  composite: '../assets/composite.gif',
+  cinder: '../assets/cinder.gif'
+};
+
+// Function to update volcano image based on slope
+function updateVolcanoImage(slope) {
+  if (slope <= 10) {
+    // Shield volcano
+    volcanoImage.src = volcanoImages.shield;
+      viscInput.value = 10;
+  supplyInput.value = 70;
+  gasInput.value = 8;
+    volcanoImage.alt = "Shield Volcano";
+    volTypeLabel.textContent = "Shield";
+    emitTypeLabel.textContent = "Effusive (lava)";
+  }
+  else if (slope <= 30) {
+    // Composite volcano
+    volcanoImage.src = volcanoImages.composite;
+      viscInput.value = 60;
+  supplyInput.value = 40;
+  gasInput.value = 50;
+    volcanoImage.alt = "Composite Volcano";
+    volTypeLabel.textContent = "Composite";
+    emitTypeLabel.textContent = "Effusive (lava)";
+  }
+  else {
+    // Cinder cone
+    volcanoImage.src = volcanoImages.cinder;
+    volcanoImage.alt = "Cinder Cone Volcano";
+      viscInput.value = 80;
+  supplyInput.value = 30;
+  gasInput.value = 70;
+    volTypeLabel.textContent = "Cinder Cone";
+    emitTypeLabel.textContent = "Explosive (ash)";
+  }
+}
+
+// Update lava speed based on viscosity
+function updateLavaSpeed(viscosity) {
+  const speedVal = Math.round(map(100 - viscosity, 0, 100, 10, 120));
+  if (speedVal < 30) lavaSpeedLabel.textContent = 'Very Slow';
+  else if (speedVal < 60) lavaSpeedLabel.textContent = 'Slow';
+  else if (speedVal < 90) lavaSpeedLabel.textContent = 'Medium';
+  else lavaSpeedLabel.textContent = 'Fast';
+}
+
+// helper: map range
+function map(v, a, b, c, d){ 
+  return c + (d - c) * ((v - a) / (b - a)); 
+}
+
+// update visuals based on inputs
+function updateVisuals(){
+  const slope = Number(slopeInput.value);
+  const visc = Number(viscInput.value);
+  const supply = Number(supplyInput.value);
+  const gas = Number(gasInput.value);
+
+  slopeDisplay.textContent = slope + '°';
+
+  // Update volcano image based on slope
+  updateVolcanoImage(slope);
+
+  // Update lava speed based on viscosity
+  updateLavaSpeed(visc);
+}
+
+// Event listeners
+slopeInput.addEventListener("input", updateVisuals);
+viscInput.addEventListener("input", updateVisuals);
+supplyInput.addEventListener("input", updateVisuals);
+gasInput.addEventListener("input", updateVisuals);
+
+// Preset buttons
+presetShield.onclick = () => {
+  slopeInput.value = 6;
+  viscInput.value = 10;
+  supplyInput.value = 70;
+  gasInput.value = 8;
+  updateVisuals();
+};
+
+presetComposite.onclick = () => {
+  slopeInput.value = 20;
+  viscInput.value = 60;
+  supplyInput.value = 40;
+  gasInput.value = 50;
+  updateVisuals();
+};
+
+presetCinder.onclick = () => {
+  slopeInput.value = 35;
+  viscInput.value = 80;
+  supplyInput.value = 30;
+  gasInput.value = 70;
+  updateVisuals();
+};
+
+// initial setup
+updateVisuals();
+
+// Make image responsive to container
+function resizeImage() {
+  const stage = document.getElementById('stage');
+  const maxWidth = stage.clientWidth * 0.9;
+  const maxHeight = stage.clientHeight * 0.7;
+  
+  volcanoImage.style.maxWidth = `${maxWidth}px`;
+  volcanoImage.style.maxHeight = `${maxHeight}px`;
+}
+
+window.addEventListener('resize', resizeImage);
+setTimeout(resizeImage, 100);
+</script>
+</body>
+</html>
