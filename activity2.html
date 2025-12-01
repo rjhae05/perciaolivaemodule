@@ -15,11 +15,11 @@
         color: #222;
     }
     .container {
-    background: #ffffff;
-    padding: 20px;
-    border-radius: 15px;
-    max-width: 600px;
-}
+        background: #ffffff;
+        padding: 20px;
+        border-radius: 15px;
+        max-width: 600px;
+    }
 
     .carousel-wrapper {
         height: 320px;
@@ -60,6 +60,8 @@
         border: none;
         color: white;
         font-weight: bold;
+        position: relative;
+        touch-action: none;
     }
 
     .btn-active { background:#ff4444; }
@@ -84,48 +86,33 @@
 </head>
 <body>
 
-<!-- ⭐ ADDED MAIN CONTAINER ⭐ -->
 <div class="container py-4">
 
-<div class="container">
+<h2 class="text-center mb-4 fw-bold">Volcano Classification</h2>
 
-    <h2 class="text-center mb-4 fw-bold">Volcano Classification</h2>
-
-    <div class="carousel-wrapper">
-        <div id="volcanoCard" class="volcano-card" 
-             data-status="active" 
-             data-png="../assets/Volcano_Mayon.png"
-             data-gif="../assets/Volcano_Mayon.gif">
-
-            <img id="volcanoImage" src="../assets/Volcano_Mayon.png">
-            <h4 class="mt-3" id="volcanoName">Mayon Volcano</h4>
-
-            <div id="statusHint"></div>
-
-        </div>
+<div class="carousel-wrapper">
+    <div id="volcanoCard" class="volcano-card">
+        <img id="volcanoImage" src="">
+        <h4 class="mt-3" id="volcanoName"></h4>
+        <div id="statusHint"></div>
     </div>
-
-    <h4 class="text-center fw-bold">Drag classification label</h4>
-
-    <div class="text-center">
-        <button class="drag-btn btn-active" draggable="true" data-type="active">
-            ACTIVE
-        </button>
-
-        <button class="drag-btn btn-inactive" draggable="true" data-type="inactive">
-            INACTIVE
-        </button>
-    </div>
-
-    <div class="text-center my-3">
-        <button class="btn btn-outline-dark px-4" id="prevBtn">Prev</button>
-        <button class="btn btn-outline-dark px-4" id="nextBtn">Next</button>
-    </div>
-
-    <hr>
 </div>
 
-</div> <!-- END MAIN CONTAINER -->
+<h4 class="text-center fw-bold">Drag classification label</h4>
+
+<div class="text-center">
+    <button class="drag-btn btn-active" data-type="active">ACTIVE</button>
+    <button class="drag-btn btn-inactive" data-type="inactive">INACTIVE</button>
+</div>
+
+<div class="text-center my-3">
+    <button class="btn btn-outline-dark px-4" id="prevBtn">Prev</button>
+    <button class="btn btn-outline-dark px-4" id="nextBtn">Next</button>
+</div>
+
+<hr>
+
+</div>
 
 <script>
 /* VOLCANO DATA */
@@ -170,22 +157,77 @@ document.getElementById("prevBtn").onclick = () => {
     loadVolcano(index);
 };
 
+/* -------------------------------
+      DRAG & DROP (TOUCH + PC)
+--------------------------------*/
 let draggedType = "";
+let activeDrag = null;
 
 document.querySelectorAll(".drag-btn").forEach(btn => {
+
+    // PC DRAG
+    btn.draggable = true;
     btn.addEventListener("dragstart", () => {
         draggedType = btn.dataset.type;
         statusHint.style.display = "block";
         statusHint.textContent = "Drop here to classify!";
     });
-    btn.addEventListener("dragend", () => {
+    btn.addEventListener("dragend", () => statusHint.style.display = "none");
+
+    // MOBILE TOUCH DRAG
+    btn.addEventListener("touchstart", e => {
+        activeDrag = btn;
+        draggedType = btn.dataset.type;
+
+        btn.style.position = "absolute";
+        btn.style.zIndex = 1000;
+        statusHint.style.display = "block";
+        statusHint.textContent = "Drop here to classify!";
+
+        moveAt(e.touches[0].clientX, e.touches[0].clientY);
+        e.preventDefault();
+    });
+
+    btn.addEventListener("touchmove", e => {
+        if (!activeDrag) return;
+        moveAt(e.touches[0].clientX, e.touches[0].clientY);
+        e.preventDefault();
+    });
+
+    btn.addEventListener("touchend", e => {
+        if (!activeDrag) return;
+
+        checkDrop(e.changedTouches[0].clientX, e.changedTouches[0].clientY);
+
+        activeDrag.style.position = "relative";
+        activeDrag.style.left = "0px";
+        activeDrag.style.top = "0px";
+        activeDrag.style.zIndex = "auto";
+
+        activeDrag = null;
         statusHint.style.display = "none";
     });
 });
 
-card.addEventListener("dragover", e => e.preventDefault());
+// MOVE BUTTON FOLLOWING FINGER
+function moveAt(x, y) {
+    activeDrag.style.left = x - activeDrag.offsetWidth / 2 + "px";
+    activeDrag.style.top = y - activeDrag.offsetHeight / 2 + "px";
+}
 
-card.addEventListener("drop", () => {
+// MOBILE DROP CHECK
+function checkDrop(x, y) {
+    const rect = card.getBoundingClientRect();
+    if (x > rect.left && x < rect.right && y > rect.top && y < rect.bottom) {
+        processDrop();
+    }
+}
+
+// PC DROP
+card.addEventListener("dragover", e => e.preventDefault());
+card.addEventListener("drop", processDrop);
+
+function processDrop() {
     const correctStatus = card.dataset.status;
 
     if (draggedType !== correctStatus) {
@@ -194,14 +236,14 @@ card.addEventListener("drop", () => {
         return;
     }
 
-    if (card.dataset.gif === "") {
+    if (!card.dataset.gif) {
         card.classList.add("volcano-glow");
         setTimeout(() => card.classList.remove("volcano-glow"), 2000);
     } else {
         img.src = card.dataset.gif;
         setTimeout(() => img.src = card.dataset.png, 2500);
     }
-});
+}
 </script>
 
 </body>
