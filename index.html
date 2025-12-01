@@ -7,7 +7,6 @@
   
   <!-- CSS Files -->
   <link rel="stylesheet" href="main.css">
-  <link rel="stylesheet" href="styles.css">
 </head>
 
 <body>
@@ -53,26 +52,24 @@
 </section>
 
 
+<section class="right-panel">
+  <div class="volcano-wrap">
 
+    <!-- Default Volcano -->
+    <img id="volcanoImg" src="https://rjhae05.github.io/perciaolivaemodule/assets/Volcano.png" class="volcano-img">
 
-    <section class="right-panel">
-      <div class="volcano-wrap">
+    <!-- Explosion GIF -->
+    <img id="explosionImg" src="assets/Volcano_Explotion.gif" class="explosion-img" style="display:none;" />
 
-        <!-- Default Volcano -->
-        <img id="volcanoImg" src="https://rjhae05.github.io/perciaolivaemodule/assets/Volcano.png" class="volcano-img" alt="Volcano">
+    <!-- Drop targets -->
+    <div class="drop-target" data-accept="crater" style="top:30%; left:46%;"></div>
+    <div class="drop-target" data-accept="vent" style="top:40%; left:50%;"></div>
+    <div class="drop-target" data-accept="magma" style="top:55%; left:35%;"></div>
+    <div class="drop-target" data-accept="lava" style="top:70%; left:54%;"></div>
+    <div class="drop-target" data-accept="ash" style="top:6%; left:62%;"></div>
 
-        <!-- Explosion GIF -->
-        <img id="explosionImg" src="assets/Volcano_Explotion.gif" class="explosion-img" />
-
-        <!-- Drop targets -->
-       <div class="drop-target" data-accept="crater" style="top:30%; left:46%;">Drop crater</div>
-        <div class="drop-target" data-accept="vent" style="top:40%; left:50%;">Drop vent</div>
-        <div class="drop-target" data-accept="magma" style="top:55%; left:35%;">Drop magma</div>
-        <div class="drop-target" data-accept="lava" style="top:70%; left:54%;">Drop lava</div>
-        <div class="drop-target" data-accept="ash" style="top:6%; left:62%;">Drop ash</div>
-
-      </div>
-    </section>
+  </div>
+</section>
 
   </main>
 
@@ -80,24 +77,6 @@
   <audio id="sound-correct" src="assets/correct.mp3"></audio>
   <audio id="sound-wrong" src="assets/wrong.mp3"></audio>
 
- <script src="main.js"></script>
-  <script src="script.js"></script>
+  <script src="main.js"></script>
 </body>
 </html>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
