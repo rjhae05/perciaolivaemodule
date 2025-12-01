@@ -4,9 +4,114 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Volcano Parts - Drag & Drop</title>
-  
-  <!-- CSS Files -->
-  <link rel="stylesheet" href="main.css">
+
+<style>
+/* ======== GENERAL STYLES ======== */
+body {
+  font-family: Arial, sans-serif;
+  background: #eef2f7;
+  margin: 0;
+  padding: 0;
+}
+
+header {
+  text-align: center;
+  background: #2a4d9b;
+  padding: 15px;
+  color: white;
+  font-size: 28px;
+}
+
+.container {
+  display: flex;
+  flex-wrap: wrap;
+  padding: 20px;
+}
+
+.left-panel {
+  width: 30%;
+  min-width: 260px;
+  padding: 10px;
+}
+
+.right-panel {
+  width: 70%;
+  min-width: 260px;
+  position: relative;
+  display: flex;
+  justify-content: center;
+}
+
+.labels-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.label-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: white;
+  padding: 12px;
+  border-radius: 10px;
+  cursor: grab;
+  border: 2px solid #d9dde3;
+  width: fit-content;
+  position: relative;
+}
+
+.label-item:active {
+  cursor: grabbing;
+}
+
+.icon {
+  width: 40px;
+}
+
+.volcano-wrap {
+  position: relative;
+  max-width: 450px;
+}
+
+.volcano-img {
+  width: 100%;
+}
+
+.explosion-img {
+  width: 100%;
+  position: absolute;
+  top: 0;
+  left: 0;
+  display: none;
+}
+
+.drop-target {
+  position: absolute;
+  width: 80px;
+  height: 80px;
+  border: 2px dashed #666;
+  border-radius: 10px;
+  text-indent: -9999px;
+}
+
+.drop-target.hover {
+  border-color: #ffaa00;
+}
+
+.reset-btn {
+  background: #d9534f;
+  color: white;
+  border: none;
+  width: 100%;
+  padding: 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  margin-top: 20px;
+  font-size: 16px;
+}
+</style>
+
 </head>
 
 <body>
@@ -51,32 +156,160 @@
   <button id="resetBtn" class="reset-btn">Reset</button>
 </section>
 
-
 <section class="right-panel">
   <div class="volcano-wrap">
 
-    <!-- Default Volcano -->
-    <img id="volcanoImg" src="https://rjhae05.github.io/perciaolivaemodule/assets/Volcano.png" class="volcano-img">
+    <img id="volcanoImg" 
+         src="https://rjhae05.github.io/perciaolivaemodule/assets/Volcano.png" 
+         class="volcano-img">
 
-    <!-- Explosion GIF -->
-    <img id="explosionImg" src="assets/Volcano_Explotion.gif" class="explosion-img" style="display:none;" />
+    <img id="explosionImg" 
+         src="assets/Volcano_Explotion.gif" 
+         class="explosion-img" />
 
-    <!-- Drop targets -->
-    <div class="drop-target" data-accept="crater" style="top:30%; left:46%;"></div>
-    <div class="drop-target" data-accept="vent" style="top:40%; left:50%;"></div>
-    <div class="drop-target" data-accept="magma" style="top:55%; left:35%;"></div>
-    <div class="drop-target" data-accept="lava" style="top:70%; left:54%;"></div>
-    <div class="drop-target" data-accept="ash" style="top:6%; left:62%;"></div>
+    <div class="drop-target" data-accept="crater" style="top:30%; left:46%;">Drop crater</div>
+    <div class="drop-target" data-accept="vent" style="top:40%; left:50%;">Drop vent</div>
+    <div class="drop-target" data-accept="magma" style="top:55%; left:35%;">Drop magma</div>
+    <div class="drop-target" data-accept="lava" style="top:70%; left:54%;">Drop lava</div>
+    <div class="drop-target" data-accept="ash" style="top:6%; left:62%;">Drop ash</div>
 
   </div>
 </section>
 
   </main>
 
-  <!-- Sounds -->
   <audio id="sound-correct" src="assets/correct.mp3"></audio>
   <audio id="sound-wrong" src="assets/wrong.mp3"></audio>
 
-  <script src="main.js"></script>
+
+
+<script>
+/* ===========================
+   MOBILE + DESKTOP DRAG LOGIC
+   =========================== */
+
+let draggedItem = null;
+let offsetX = 0;
+let offsetY = 0;
+
+const explosion = document.getElementById("explosionImg");
+const sndCorrect = document.getElementById("sound-correct");
+const sndWrong = document.getElementById("sound-wrong");
+const resetBtn = document.getElementById("resetBtn");
+
+const labels = document.querySelectorAll(".label-item");
+const targets = document.querySelectorAll(".drop-target");
+
+labels.forEach(label => {
+
+  /* === DESKTOP DRAG === */
+  label.addEventListener("dragstart", () => {
+    draggedItem = label;
+  });
+
+  /* === TOUCH START === */
+  label.addEventListener("touchstart", e => {
+    const touch = e.touches[0];
+    offsetX = touch.clientX - label.getBoundingClientRect().left;
+    offsetY = touch.clientY - label.getBoundingClientRect().top;
+
+    draggedItem = label;
+    label.style.position = "absolute";
+    label.style.zIndex = 1000;
+  });
+
+  /* === TOUCH MOVE === */
+  label.addEventListener("touchmove", e => {
+    if (!draggedItem) return;
+
+    const touch = e.touches[0];
+    draggedItem.style.left = (touch.clientX - offsetX) + "px";
+    draggedItem.style.top = (touch.clientY - offsetY) + "px";
+
+    const itemRect = draggedItem.getBoundingClientRect();
+
+    targets.forEach(t => {
+      const rect = t.getBoundingClientRect();
+      if (itemRect.left < rect.right &&
+          itemRect.right > rect.left &&
+          itemRect.top < rect.bottom &&
+          itemRect.bottom > rect.top) {
+        t.classList.add("hover");
+      } else {
+        t.classList.remove("hover");
+      }
+    });
+  });
+
+  /* === TOUCH END === */
+  label.addEventListener("touchend", () => {
+    handleDrop();
+  });
+});
+
+/* === DESKTOP DROP === */
+targets.forEach(target => {
+  target.addEventListener("dragover", e => e.preventDefault());
+  target.addEventListener("drop", e => {
+    e.preventDefault();
+    handleTargetDrop(target);
+  });
+});
+
+
+/* === UNIVERSAL DROP HANDLER (Touch & Mouse) === */
+function handleDrop() {
+  const itemRect = draggedItem.getBoundingClientRect();
+  let dropped = false;
+
+  targets.forEach(target => {
+    const rect = target.getBoundingClientRect();
+
+    if (itemRect.left < rect.right &&
+        itemRect.right > rect.left &&
+        itemRect.top < rect.bottom &&
+        itemRect.bottom > rect.top) {
+
+      handleTargetDrop(target);
+      dropped = true;
+    }
+  });
+
+  if (!dropped) {
+    sndWrong.play();
+    draggedItem.style.left = "";
+    draggedItem.style.top = "";
+    draggedItem.style.position = "relative";
+  }
+
+  draggedItem = null;
+}
+
+
+/* === PROCESS CORRECT / WRONG DROP === */
+function handleTargetDrop(target) {
+  if (draggedItem.dataset.name === target.dataset.accept) {
+
+    sndCorrect.play();
+    explosion.style.display = "block";
+    setTimeout(() => explosion.style.display = "none", 800);
+
+    draggedItem.style.position = "absolute";
+    draggedItem.style.left = target.style.left;
+    draggedItem.style.top = target.style.top;
+    draggedItem.setAttribute("draggable", false);
+
+    target.style.border = "3px solid #28a745";
+
+  } else {
+    sndWrong.play();
+  }
+}
+
+
+/* === RESET === */
+resetBtn.addEventListener("click", () => location.reload());
+</script>
+
 </body>
 </html>
