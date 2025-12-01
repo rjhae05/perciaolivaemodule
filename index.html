@@ -4,99 +4,840 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Volcano Parts - Drag & Drop</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   
-  <!-- CSS Files -->
-  <link rel="stylesheet" href="main.css">
-  <link rel="stylesheet" href="styles.css">
+  <style>
+    /* GLOBAL STYLES */
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: "Poppins", sans-serif;
+      background: #f8fafc;
+      color: #333;
+      line-height: 1.6;
+      padding: 0;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+
+    header {
+      background: #edf2ff;
+      padding: 20px;
+      border-bottom: 1px solid #cbd5f7;
+      text-align: center;
+    }
+
+    h1 {
+      color: #2a4d9e;
+      font-size: 28px;
+      margin: 0;
+      font-weight: 700;
+    }
+
+    /* MOBILE FLOATING LABELS */
+    .mobile-labels {
+      display: none;
+      position: fixed;
+      top: 20px;
+      left: 0;
+      right: 0;
+      z-index: 1000;
+      background: rgba(255, 255, 255, 0.95);
+      padding: 15px;
+      border-radius: 0 0 20px 20px;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+      backdrop-filter: blur(10px);
+    }
+
+    .mobile-labels-container {
+      display: flex;
+      justify-content: center;
+      gap: 12px;
+      flex-wrap: wrap;
+      max-width: 800px;
+      margin: 0 auto;
+    }
+
+    .mobile-label-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      width: 70px;
+      cursor: grab;
+      user-select: none;
+    }
+
+    .mobile-label-item:active {
+      transform: scale(0.95);
+    }
+
+    .mobile-icon {
+      width: 50px;
+      height: 50px;
+      background: #2a4d9e;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 5px;
+      color: white;
+      font-size: 20px;
+      font-weight: 600;
+      box-shadow: 0 3px 8px rgba(0, 0, 0, 0.2);
+    }
+
+    .mobile-label-text {
+      font-size: 11px;
+      text-align: center;
+      color: #2a4d9e;
+      font-weight: 500;
+      white-space: nowrap;
+    }
+
+    /* MAIN LAYOUT - DESKTOP */
+    .main-content {
+      display: grid;
+      grid-template-columns: 300px 1fr;
+      gap: 30px;
+      margin-top: 20px;
+    }
+
+    /* LEFT PANEL - DESKTOP */
+    .left-panel {
+      background: white;
+      border-radius: 12px;
+      padding: 25px;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+      height: fit-content;
+    }
+
+    .label-title {
+      color: #2a4d9e;
+      font-size: 22px;
+      margin-bottom: 20px;
+      padding-bottom: 10px;
+      border-bottom: 2px solid #eef2ff;
+    }
+
+    .labels-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .label-item {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      padding: 15px;
+      background: #f8fafc;
+      border-radius: 10px;
+      border: 2px solid transparent;
+      cursor: grab;
+      user-select: none;
+      transition: all 0.3s ease;
+    }
+
+    .label-item:hover {
+      background: #eef2ff;
+      border-color: #2a4d9e;
+      transform: translateY(-2px);
+    }
+
+    .label-item.dragging {
+      opacity: 0.5;
+      transform: scale(0.98);
+    }
+
+    .icon {
+      width: 40px;
+      height: 40px;
+      object-fit: contain;
+    }
+
+    .label-item span {
+      font-weight: 600;
+      color: #2a4d9e;
+      font-size: 16px;
+    }
+
+    /* RIGHT PANEL */
+    .right-panel {
+      background: white;
+      border-radius: 12px;
+      padding: 25px;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+      position: relative;
+    }
+
+    .volcano-wrap {
+      position: relative;
+      min-height: 600px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .volcano-img {
+      width: 100%;
+      max-width: 600px;
+      height: auto;
+      display: block;
+      transition: opacity 0.5s ease;
+    }
+
+    .explosion-img {
+      position: absolute;
+      top: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 100%;
+      max-width: 600px;
+      height: auto;
+      opacity: 0;
+      z-index: 2;
+      transition: opacity 0.5s ease;
+    }
+
+    /* DROP TARGETS */
+    .drop-target {
+      position: absolute;
+      padding: 10px 15px;
+      background: rgba(255, 255, 255, 0.95);
+      border: 2px dashed #2a4d9e;
+      border-radius: 10px;
+      font-weight: 600;
+      color: #2a4d9e;
+      text-align: center;
+      min-width: 120px;
+      cursor: pointer;
+      z-index: 10;
+      transition: all 0.3s ease;
+      user-select: none;
+      box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
+    }
+
+    .drop-target:hover {
+      background: rgba(42, 77, 158, 0.1);
+    }
+
+    .drop-target.correct {
+      background: #d4edda;
+      border-color: #28a745;
+      color: #155724;
+    }
+
+    .drop-target.wrong {
+      background: #f8d7da;
+      border-color: #dc3545;
+      color: #721c24;
+      animation: shake 0.5s ease;
+    }
+
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      25% { transform: translateX(-5px); }
+      75% { transform: translateX(5px); }
+    }
+
+    /* VOLCANO SHAKE ANIMATION */
+    .volcano-shake {
+      animation: volcanoShake 0.8s ease-in-out;
+    }
+
+    @keyframes volcanoShake {
+      0%, 100% { transform: translateX(0); }
+      10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
+      20%, 40%, 60%, 80% { transform: translateX(5px); }
+    }
+
+    /* RESET BUTTON */
+    .reset-btn {
+      width: 100%;
+      padding: 15px;
+      background: #2a4d9e;
+      color: white;
+      border: none;
+      border-radius: 10px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      margin-top: 25px;
+      transition: all 0.3s ease;
+    }
+
+    .reset-btn:hover {
+      background: #1a3d8e;
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(42, 77, 158, 0.3);
+    }
+
+    /* INSTRUCTIONS */
+    .instructions {
+      background: #eef2ff;
+      padding: 15px;
+      border-radius: 10px;
+      margin-top: 20px;
+      font-size: 14px;
+      color: #2a4d9e;
+    }
+
+    /* MOBILE RESPONSIVE */
+    @media (max-width: 768px) {
+      .container {
+        padding: 10px;
+      }
+
+      h1 {
+        font-size: 22px;
+      }
+
+      /* Show mobile labels, hide desktop labels */
+      .mobile-labels {
+        display: block;
+      }
+
+      .left-panel {
+        display: none; /* Hide desktop labels on mobile */
+      }
+
+      /* Change layout to single column on mobile */
+      .main-content {
+        grid-template-columns: 1fr;
+        gap: 20px;
+        margin-top: 120px; /* Space for mobile labels */
+      }
+
+      .right-panel {
+        padding: 15px;
+      }
+
+      .volcano-wrap {
+        min-height: 500px;
+      }
+
+      .volcano-img, .explosion-img {
+        max-width: 100%;
+      }
+
+      /* Adjust drop targets for mobile */
+      .drop-target {
+        min-width: 100px;
+        padding: 8px 12px;
+        font-size: 14px;
+      }
+
+      /* Position drop targets for mobile view */
+      .drop-target[data-accept="crater"] {
+        top: 25% !important;
+        left: 45% !important;
+      }
+
+      .drop-target[data-accept="vent"] {
+        top: 35% !important;
+        left: 48% !important;
+      }
+
+      .drop-target[data-accept="magma"] {
+        top: 50% !important;
+        left: 35% !important;
+      }
+
+      .drop-target[data-accept="lava"] {
+        top: 65% !important;
+        left: 52% !important;
+      }
+
+      .drop-target[data-accept="ash"] {
+        top: 10% !important;
+        left: 60% !important;
+      }
+
+      .instructions {
+        font-size: 12px;
+        padding: 12px;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .mobile-labels-container {
+        gap: 8px;
+      }
+
+      .mobile-label-item {
+        width: 60px;
+      }
+
+      .mobile-icon {
+        width: 45px;
+        height: 45px;
+        font-size: 18px;
+      }
+
+      .mobile-label-text {
+        font-size: 10px;
+      }
+
+      .volcano-wrap {
+        min-height: 450px;
+      }
+
+      .drop-target {
+        min-width: 80px;
+        padding: 6px 10px;
+        font-size: 12px;
+      }
+    }
+
+    /* SUCCESS MESSAGE */
+    .success-message {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: rgba(0, 0, 0, 0.8);
+      color: white;
+      padding: 30px 40px;
+      border-radius: 15px;
+      text-align: center;
+      z-index: 10000;
+      display: none;
+      animation: fadeIn 0.5s ease;
+    }
+
+    .success-message h2 {
+      color: #4CAF50;
+      margin-bottom: 15px;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translate(-50%, -60%); }
+      to { opacity: 1; transform: translate(-50%, -50%); }
+    }
+
+    /* HIDE WHILE DRAGGING */
+    .hide-while-drag {
+      opacity: 0.5;
+      transform: scale(0.95);
+    }
+  </style>
 </head>
 
 <body>
   <header>
-    <h1>Volcano — Parts Drag & Drop</h1>
+    <h1>Volcano Parts - Drag & Drop</h1>
   </header>
 
-  <main class="container">
-    
-<section class="left-panel">
-  <h2 class="label-title">Labels</h2>
-
-  <div id="labels" class="labels-list">
-
-    <div class="label-item label" draggable="true" data-name="crater">
-      <img src="https://rjhae05.github.io/perciaolivaemodule/assets/crater.png" class="icon">
-      <span>Crater</span>
+  <!-- MOBILE FLOATING LABELS -->
+  <div class="mobile-labels" id="mobileLabels">
+    <div class="mobile-labels-container">
+      <div class="mobile-label-item" draggable="true" data-name="crater">
+        <div class="mobile-icon">C</div>
+        <div class="mobile-label-text">Crater</div>
+      </div>
+      <div class="mobile-label-item" draggable="true" data-name="vent">
+        <div class="mobile-icon">V</div>
+        <div class="mobile-label-text">Vent</div>
+      </div>
+      <div class="mobile-label-item" draggable="true" data-name="magma">
+        <div class="mobile-icon">M</div>
+        <div class="mobile-label-text">Magma</div>
+      </div>
+      <div class="mobile-label-item" draggable="true" data-name="lava">
+        <div class="mobile-icon">L</div>
+        <div class="mobile-label-text">Lava</div>
+      </div>
+      <div class="mobile-label-item" draggable="true" data-name="ash">
+        <div class="mobile-icon">A</div>
+        <div class="mobile-label-text">Ash</div>
+      </div>
     </div>
-
-    <div class="label-item label" draggable="true" data-name="vent">
-      <img src="https://rjhae05.github.io/perciaolivaemodule/assets/vent.png" class="icon">
-      <span>Vent</span>
-    </div>
-
-    <div class="label-item label" draggable="true" data-name="magma">
-      <img src="https://rjhae05.github.io/perciaolivaemodule/assets/magma_chamber.png" class="icon">
-      <span>Magma Chamber</span>
-    </div>
-
-    <div class="label-item label" draggable="true" data-name="lava">
-      <img src="https://rjhae05.github.io/perciaolivaemodule/assets/lava_flow.png" class="icon">
-      <span>Lava Flow</span>
-    </div>
-
-    <div class="label-item label" draggable="true" data-name="ash">
-      <img src="https://rjhae05.github.io/perciaolivaemodule/assets/ash.png" class="icon">
-      <span>Ash Cloud</span>
-    </div>
-
   </div>
 
-  <button id="resetBtn" class="reset-btn">Reset</button>
-</section>
+  <main class="container">
+    <div class="main-content">
+      <!-- LEFT PANEL - DESKTOP -->
+      <section class="left-panel">
+        <h2 class="label-title">Labels</h2>
+        <div id="labels" class="labels-list">
+          <div class="label-item label" draggable="true" data-name="crater">
+            <img src="https://rjhae05.github.io/perciaolivaemodule/assets/crater.png" class="icon">
+            <span>Crater</span>
+          </div>
+          <div class="label-item label" draggable="true" data-name="vent">
+            <img src="https://rjhae05.github.io/perciaolivaemodule/assets/vent.png" class="icon">
+            <span>Vent</span>
+          </div>
+          <div class="label-item label" draggable="true" data-name="magma">
+            <img src="https://rjhae05.github.io/perciaolivaemodule/assets/magma_chamber.png" class="icon">
+            <span>Magma Chamber</span>
+          </div>
+          <div class="label-item label" draggable="true" data-name="lava">
+            <img src="https://rjhae05.github.io/perciaolivaemodule/assets/lava_flow.png" class="icon">
+            <span>Lava Flow</span>
+          </div>
+          <div class="label-item label" draggable="true" data-name="ash">
+            <img src="https://rjhae05.github.io/perciaolivaemodule/assets/ash.png" class="icon">
+            <span>Ash Cloud</span>
+          </div>
+        </div>
 
+        <button id="resetBtn" class="reset-btn">Reset Activity</button>
+        
+        <div class="instructions">
+          <strong>Instructions:</strong><br>
+          <span id="desktopInstruction">Drag and drop the labels onto the correct parts of the volcano.</span>
+          <span id="mobileInstruction" style="display: none;">Tap and drag the labels above onto the correct parts of the volcano.</span>
+        </div>
+      </section>
 
+      <!-- RIGHT PANEL -->
+      <section class="right-panel">
+        <div class="volcano-wrap">
+          <!-- Default Volcano -->
+          <img id="volcanoImg" src="https://rjhae05.github.io/perciaolivaemodule/assets/Volcano.png" class="volcano-img" alt="Volcano">
 
+          <!-- Explosion GIF -->
+          <img id="explosionImg" src="https://rjhae05.github.io/perciaolivaemodule/assets/Volcano_Explotion.gif" class="explosion-img" alt="Volcano Eruption" />
 
-    <section class="right-panel">
-      <div class="volcano-wrap">
-
-        <!-- Default Volcano -->
-        <img id="volcanoImg" src="https://rjhae05.github.io/perciaolivaemodule/assets/Volcano.png" class="volcano-img" alt="Volcano">
-
-        <!-- Explosion GIF -->
-        <img id="explosionImg" src="assets/Volcano_Explotion.gif" class="explosion-img" />
-
-        <!-- Drop targets -->
-       <div class="drop-target" data-accept="crater" style="top:30%; left:46%;">Drop crater</div>
-        <div class="drop-target" data-accept="vent" style="top:40%; left:50%;">Drop vent</div>
-        <div class="drop-target" data-accept="magma" style="top:55%; left:35%;">Drop magma</div>
-        <div class="drop-target" data-accept="lava" style="top:70%; left:54%;">Drop lava</div>
-        <div class="drop-target" data-accept="ash" style="top:6%; left:62%;">Drop ash</div>
-
-      </div>
-    </section>
-
+          <!-- Drop targets -->
+          <div class="drop-target" data-accept="crater" style="top:30%; left:46%;">Drop crater</div>
+          <div class="drop-target" data-accept="vent" style="top:40%; left:50%;">Drop vent</div>
+          <div class="drop-target" data-accept="magma" style="top:55%; left:35%;">Drop magma</div>
+          <div class="drop-target" data-accept="lava" style="top:70%; left:54%;">Drop lava</div>
+          <div class="drop-target" data-accept="ash" style="top:6%; left:62%;">Drop ash</div>
+        </div>
+      </section>
+    </div>
   </main>
 
-  <!-- Sounds -->
-  <audio id="sound-correct" src="assets/correct.mp3"></audio>
-  <audio id="sound-wrong" src="assets/wrong.mp3"></audio>
+  <!-- SUCCESS MESSAGE -->
+  <div class="success-message" id="successMessage">
+    <h2>🎉 Congratulations!</h2>
+    <p>You've correctly labeled all volcano parts!</p>
+    <p>The volcano is erupting!</p>
+  </div>
 
- <script src="main.js"></script>
-  <script src="script.js"></script>
+  <script>
+    // STATE VARIABLES
+    let draggedLabel = null;
+    let correctCount = 0;
+    const totalParts = 5;
+    let isMobile = false;
+    let touchDragging = null;
+
+    // ELEMENTS
+    const labels = document.querySelectorAll(".label");
+    const mobileLabels = document.querySelectorAll(".mobile-label-item");
+    const targets = document.querySelectorAll(".drop-target");
+    const volcanoImg = document.getElementById("volcanoImg");
+    const explosionImg = document.getElementById("explosionImg");
+    const resetBtn = document.getElementById("resetBtn");
+    const successMessage = document.getElementById("successMessage");
+    const desktopInstruction = document.getElementById("desktopInstruction");
+    const mobileInstruction = document.getElementById("mobileInstruction");
+
+    // DEFAULT PLACEHOLDERS
+    const defaultPlaceholders = {
+      crater: "Drop crater",
+      vent: "Drop vent",
+      magma: "Drop magma",
+      lava: "Drop lava",
+      ash: "Drop ash"
+    };
+
+    // CHECK IF MOBILE
+    function checkIfMobile() {
+      isMobile = window.innerWidth <= 768;
+      if (isMobile) {
+        desktopInstruction.style.display = "none";
+        mobileInstruction.style.display = "inline";
+      } else {
+        desktopInstruction.style.display = "inline";
+        mobileInstruction.style.display = "none";
+      }
+      return isMobile;
+    }
+
+    // INITIALIZE
+    function initialize() {
+      checkIfMobile();
+      
+      if (isMobile) {
+        setupMobileDragDrop();
+      } else {
+        setupDesktopDragDrop();
+      }
+      
+      setupResetButton();
+    }
+
+    // DESKTOP DRAG AND DROP
+    function setupDesktopDragDrop() {
+      labels.forEach(label => {
+        label.addEventListener("dragstart", (e) => {
+          draggedLabel = e.target;
+          setTimeout(() => e.target.classList.add("dragging"), 10);
+        });
+
+        label.addEventListener("dragend", (e) => {
+          e.target.classList.remove("dragging");
+        });
+      });
+
+      targets.forEach(target => {
+        target.addEventListener("dragover", (e) => e.preventDefault());
+
+        target.addEventListener("drop", function (e) {
+          e.preventDefault();
+          handleDrop(this);
+        });
+      });
+    }
+
+    // MOBILE DRAG AND DROP (TOUCH SUPPORT)
+    function setupMobileDragDrop() {
+      let touchStartX, touchStartY;
+      let draggedElement = null;
+      let ghostElement = null;
+
+      // Touch start for mobile labels
+      mobileLabels.forEach(label => {
+        label.addEventListener('touchstart', function(e) {
+          e.preventDefault();
+          touchDragging = this;
+          draggedLabel = this;
+          
+          const touch = e.touches[0];
+          touchStartX = touch.clientX;
+          touchStartY = touch.clientY;
+          
+          // Create ghost element for visual feedback
+          ghostElement = this.cloneNode(true);
+          ghostElement.style.position = 'fixed';
+          ghostElement.style.left = (touch.clientX - 25) + 'px';
+          ghostElement.style.top = (touch.clientY - 25) + 'px';
+          ghostElement.style.zIndex = '10000';
+          ghostElement.style.opacity = '0.8';
+          ghostElement.style.pointerEvents = 'none';
+          ghostElement.style.transform = 'scale(1.2)';
+          ghostElement.style.boxShadow = '0 5px 15px rgba(0,0,0,0.3)';
+          document.body.appendChild(ghostElement);
+        }, { passive: false });
+
+        // Touch move
+        label.addEventListener('touchmove', function(e) {
+          if (touchDragging !== this) return;
+          e.preventDefault();
+          
+          const touch = e.touches[0];
+          if (ghostElement) {
+            ghostElement.style.left = (touch.clientX - 25) + 'px';
+            ghostElement.style.top = (touch.clientY - 25) + 'px';
+          }
+        }, { passive: false });
+
+        // Touch end
+        label.addEventListener('touchend', function(e) {
+          if (touchDragging !== this) return;
+          
+          e.preventDefault();
+          
+          // Remove ghost element
+          if (ghostElement) {
+            document.body.removeChild(ghostElement);
+            ghostElement = null;
+          }
+          
+          // Check if dropped on target
+          const touch = e.changedTouches[0];
+          const elements = document.elementsFromPoint(touch.clientX, touch.clientY);
+          
+          let targetElement = null;
+          elements.forEach(el => {
+            if (el.classList.contains('drop-target')) {
+              targetElement = el;
+            }
+          });
+          
+          if (targetElement) {
+            handleDrop(targetElement);
+          }
+          
+          touchDragging = null;
+          draggedLabel = null;
+        }, { passive: false });
+      });
+
+      // Also allow desktop labels on mobile (if they're visible)
+      labels.forEach(label => {
+        label.addEventListener("touchstart", (e) => {
+          e.preventDefault();
+          draggedLabel = e.target;
+        }, { passive: false });
+      });
+
+      // Add touch events to drop targets
+      targets.forEach(target => {
+        target.addEventListener('touchend', function(e) {
+          if (draggedLabel) {
+            handleDrop(this);
+          }
+        });
+      });
+    }
+
+    // HANDLE DROP
+    function handleDrop(target) {
+      if (!draggedLabel) return;
+
+      const correctName = target.dataset.accept;
+      const draggedName = draggedLabel.dataset.name;
+
+      if (correctName === draggedName) {
+        // CORRECT
+        target.classList.add("correct");
+        target.classList.remove("wrong");
+        
+        // Get label text
+        let labelText = "";
+        if (draggedLabel.querySelector('span')) {
+          labelText = draggedLabel.querySelector('span').textContent.trim();
+        } else if (draggedLabel.querySelector('.mobile-label-text')) {
+          labelText = draggedLabel.querySelector('.mobile-label-text').textContent.trim();
+        } else {
+          labelText = draggedName.charAt(0).toUpperCase() + draggedName.slice(1);
+        }
+        
+        target.textContent = labelText;
+        
+        // Hide the dragged label
+        if (isMobile) {
+          draggedLabel.style.opacity = "0.3";
+          draggedLabel.style.pointerEvents = "none";
+        } else {
+          draggedLabel.style.display = "none";
+        }
+
+        // Play sound (simulated)
+        playSound('correct');
+
+        correctCount++;
+        if (correctCount === totalParts) {
+          triggerExplosion();
+        }
+
+      } else {
+        // WRONG
+        target.classList.add("wrong");
+        playSound('wrong');
+        setTimeout(() => target.classList.remove("wrong"), 500);
+      }
+
+      draggedLabel = null;
+    }
+
+    // PLAY SOUND (SIMULATED)
+    function playSound(type) {
+      // In a real implementation, you would use actual audio files
+      if (type === 'correct') {
+        // Play correct sound
+        const audio = new Audio('data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEAQB8AAEAfAAABAAgAZGF0YQ');
+        audio.volume = 0.3;
+        audio.play().catch(e => console.log("Audio play failed:", e));
+      } else {
+        // Play wrong sound
+        const audio = new Audio('data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEAQB8AAEAfAAABAAgAZGF0YQ');
+        audio.volume = 0.3;
+        audio.play().catch(e => console.log("Audio play failed:", e));
+      }
+    }
+
+    // TRIGGER EXPLOSION
+    function triggerExplosion() {
+      // Hide labels
+      labels.forEach(l => l.style.display = "none");
+      mobileLabels.forEach(l => {
+        l.style.opacity = "0.3";
+        l.style.pointerEvents = "none";
+      });
+      
+      // Hide targets
+      targets.forEach(t => t.style.display = "none");
+
+      // Volcano shake
+      volcanoImg.classList.add("volcano-shake");
+
+      // Show success message
+      successMessage.style.display = "block";
+
+      // Switch to explosion GIF
+      setTimeout(() => {
+        volcanoImg.style.opacity = "0";
+        explosionImg.style.opacity = "1";
+      }, 900);
+    }
+
+    // RESET FUNCTION
+    function setupResetButton() {
+      resetBtn.addEventListener("click", resetActivity);
+    }
+
+    function resetActivity() {
+      correctCount = 0;
+
+      // Reset labels
+      labels.forEach(label => {
+        label.style.display = "flex";
+        label.style.opacity = "1";
+      });
+      
+      mobileLabels.forEach(label => {
+        label.style.opacity = "1";
+        label.style.pointerEvents = "auto";
+      });
+
+      // Reset targets
+      targets.forEach(target => {
+        const acceptName = target.dataset.accept;
+        target.textContent = defaultPlaceholders[acceptName];
+        target.classList.remove("correct", "wrong");
+        target.style.display = "block";
+      });
+
+      // Reset images
+      volcanoImg.style.opacity = "1";
+      explosionImg.style.opacity = "0";
+      volcanoImg.classList.remove("volcano-shake");
+
+      // Hide success message
+      successMessage.style.display = "none";
+    }
+
+    // WINDOW RESIZE HANDLER
+    window.addEventListener('resize', () => {
+      const wasMobile = isMobile;
+      checkIfMobile();
+      
+      if (wasMobile !== isMobile) {
+        // Reinitialize if mobile status changed
+        initialize();
+      }
+    });
+
+    // INITIALIZE ON LOAD
+    document.addEventListener('DOMContentLoaded', initialize);
+  </script>
 </body>
 </html>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
