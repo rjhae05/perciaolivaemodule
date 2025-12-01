@@ -1,102 +1,278 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Volcano Parts - Drag & Drop</title>
-  
-  <!-- CSS Files -->
-  <link rel="stylesheet" href="main.css">
-  <link rel="stylesheet" href="styles.css">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Volcano Parts - Drag & Drop</title>
+
+<style>
+  body {
+    font-family: Arial, sans-serif;
+    background: #eef3ff;
+    margin: 0;
+    padding: 0;
+  }
+
+  header {
+    background: #294a9c;
+    padding: 15px;
+    text-align: center;
+    color: white;
+    font-size: 22px;
+    font-weight: bold;
+  }
+
+  .container {
+    display: flex;
+    flex-wrap: wrap;
+    padding: 15px;
+    gap: 20px;
+  }
+
+  .left-panel {
+    flex: 1;
+    min-width: 260px;
+    background: #fff;
+    padding: 15px;
+    border-radius: 8px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+  }
+
+  .label-title {
+    font-size: 18px;
+    font-weight: bold;
+    color: #294a9c;
+    margin-bottom: 12px;
+  }
+
+  .labels-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .label-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px;
+    background: #f4f7ff;
+    border: 1px solid #cdd7ff;
+    border-radius: 6px;
+    cursor: grab;
+    user-select: none;
+    width: fit-content;
+  }
+
+  .label-item img.icon {
+    width: 30px;
+    height: 30px;
+  }
+
+  .reset-btn {
+    margin-top: 15px;
+    padding: 10px;
+    width: 100%;
+    background: #294a9c;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 16px;
+  }
+
+  .right-panel {
+    flex: 2;
+    min-width: 300px;
+  }
+
+  .volcano-wrap {
+    position: relative;
+    width: 100%;
+    max-width: 520px;
+    margin: auto;
+  }
+
+  .volcano-img {
+    width: 100%;
+    border-radius: 10px;
+    pointer-events: none;
+  }
+
+  .explosion-img {
+    position: absolute;
+    width: 100%;
+    top: 0;
+    left: 0;
+    display: none;
+    pointer-events: none;
+  }
+
+  .drop-target {
+    position: absolute;
+    padding: 5px 10px;
+    background: rgba(255,255,255,0.7);
+    border: 2px dashed #294a9c;
+    border-radius: 6px;
+    font-size: 12px;
+    color: #294a9c;
+    text-align: center;
+    transform: translate(-50%, -50%);
+  }
+
+  /* Dragging item */
+  .dragging {
+    position: fixed;
+    pointer-events: none;
+    z-index: 9999;
+  }
+</style>
+
 </head>
-
 <body>
-  <header>
-    <h1>Volcano — Parts Drag & Drop</h1>
-  </header>
 
-  <main class="container">
-    
-<section class="left-panel">
-  <h2 class="label-title">Labels</h2>
+<header>Volcano — Parts Drag & Drop</header>
 
-  <div id="labels" class="labels-list">
+<main class="container">
 
-    <div class="label-item label" draggable="true" data-name="crater">
-      <img src="https://rjhae05.github.io/perciaolivaemodule/assets/crater.png" class="icon">
-      <span>Crater</span>
-    </div>
+  <section class="left-panel">
+    <h2 class="label-title">Labels</h2>
 
-    <div class="label-item label" draggable="true" data-name="vent">
-      <img src="https://rjhae05.github.io/perciaolivaemodule/assets/vent.png" class="icon">
-      <span>Vent</span>
-    </div>
+    <div id="labels" class="labels-list">
 
-    <div class="label-item label" draggable="true" data-name="magma">
-      <img src="https://rjhae05.github.io/perciaolivaemodule/assets/magma_chamber.png" class="icon">
-      <span>Magma Chamber</span>
-    </div>
-
-    <div class="label-item label" draggable="true" data-name="lava">
-      <img src="https://rjhae05.github.io/perciaolivaemodule/assets/lava_flow.png" class="icon">
-      <span>Lava Flow</span>
-    </div>
-
-    <div class="label-item label" draggable="true" data-name="ash">
-      <img src="https://rjhae05.github.io/perciaolivaemodule/assets/ash.png" class="icon">
-      <span>Ash Cloud</span>
-    </div>
-
-  </div>
-
-  <button id="resetBtn" class="reset-btn">Reset</button>
-</section>
-
-
-
-
-    <section class="right-panel">
-      <div class="volcano-wrap">
-
-        <!-- Default Volcano -->
-        <img id="volcanoImg" src="https://rjhae05.github.io/perciaolivaemodule/assets/Volcano.png" class="volcano-img" alt="Volcano">
-
-        <!-- Explosion GIF -->
-        <img id="explosionImg" src="assets/Volcano_Explotion.gif" class="explosion-img" />
-
-        <!-- Drop targets -->
-       <div class="drop-target" data-accept="crater" style="top:30%; left:46%;">Drop crater</div>
-        <div class="drop-target" data-accept="vent" style="top:40%; left:50%;">Drop vent</div>
-        <div class="drop-target" data-accept="magma" style="top:55%; left:35%;">Drop magma</div>
-        <div class="drop-target" data-accept="lava" style="top:70%; left:54%;">Drop lava</div>
-        <div class="drop-target" data-accept="ash" style="top:6%; left:62%;">Drop ash</div>
-
+      <div class="label-item" draggable="true" data-name="crater">
+        <img src="https://rjhae05.github.io/perciaolivaemodule/assets/crater.png" class="icon">
+        <span>Crater</span>
       </div>
-    </section>
 
-  </main>
+      <div class="label-item" draggable="true" data-name="vent">
+        <img src="https://rjhae05.github.io/perciaolivaemodule/assets/vent.png" class="icon">
+        <span>Vent</span>
+      </div>
 
-  <!-- Sounds -->
-  <audio id="sound-correct" src="assets/correct.mp3"></audio>
-  <audio id="sound-wrong" src="assets/wrong.mp3"></audio>
+      <div class="label-item" draggable="true" data-name="magma">
+        <img src="https://rjhae05.github.io/perciaolivaemodule/assets/magma_chamber.png" class="icon">
+        <span>Magma Chamber</span>
+      </div>
 
- <script src="main.js"></script>
-  <script src="script.js"></script>
+      <div class="label-item" draggable="true" data-name="lava">
+        <img src="https://rjhae05.github.io/perciaolivaemodule/assets/lava_flow.png" class="icon">
+        <span>Lava Flow</span>
+      </div>
+
+      <div class="label-item" draggable="true" data-name="ash">
+        <img src="https://rjhae05.github.io/perciaolivaemodule/assets/ash.png" class="icon">
+        <span>Ash Cloud</span>
+      </div>
+
+    </div>
+
+    <button id="resetBtn" class="reset-btn">Reset</button>
+  </section>
+
+
+  <section class="right-panel">
+    <div class="volcano-wrap">
+
+      <img id="volcanoImg" src="https://rjhae05.github.io/perciaolivaemodule/assets/Volcano.png" class="volcano-img">
+
+      <img id="explosionImg" src="assets/Volcano_Explotion.gif" class="explosion-img">
+
+      <!-- Drop Targets -->
+      <div class="drop-target" data-accept="crater" style="top:30%; left:46%;">Crater</div>
+      <div class="drop-target" data-accept="vent" style="top:40%; left:50%;">Vent</div>
+      <div class="drop-target" data-accept="magma" style="top:55%; left:35%;">Magma</div>
+      <div class="drop-target" data-accept="lava" style="top:70%; left:54%;">Lava</div>
+      <div class="drop-target" data-accept="ash" style="top:6%; left:62%;">Ash</div>
+
+    </div>
+  </section>
+
+</main>
+
+<!-- Sounds -->
+<audio id="sound-correct" src="assets/correct.mp3"></audio>
+<audio id="sound-wrong" src="assets/wrong.mp3"></audio>
+
+<script>
+let dragging = null;
+
+function startDrag(e) {
+  const item = e.target.closest(".label-item");
+  if (!item) return;
+
+  dragging = item.cloneNode(true);
+  dragging.classList.add("dragging");
+  document.body.appendChild(dragging);
+
+  moveDrag(e);
+}
+
+function moveDrag(e) {
+  if (!dragging) return;
+
+  const x = e.touches ? e.touches[0].clientX : e.clientX;
+  const y = e.touches ? e.touches[0].clientY : e.clientY;
+
+  dragging.style.left = x + "px";
+  dragging.style.top = y + "px";
+}
+
+function endDrag(e) {
+  if (!dragging) return;
+
+  const x = e.changedTouches ? e.changedTouches[0].clientX : e.clientX;
+  const y = e.changedTouches ? e.changedTouches[0].clientY : e.clientY;
+
+  const dropTargets = document.querySelectorAll(".drop-target");
+
+  let droppedCorrect = false;
+
+  dropTargets.forEach(target => {
+    const rect = target.getBoundingClientRect();
+    if (x > rect.left && x < rect.right && y > rect.top && y < rect.bottom) {
+
+      if (dragging.dataset.name === target.dataset.accept) {
+        target.style.background = "#b2f2bb";
+        target.style.borderColor = "#2b8a3e";
+        document.getElementById("sound-correct").play();
+        droppedCorrect = true;
+
+        // Explosion animation for crater only
+        if (dragging.dataset.name === "crater") {
+          const explosion = document.getElementById("explosionImg");
+          explosion.style.display = "block";
+          setTimeout(() => explosion.style.display = "none", 1500);
+        }
+      }
+      else {
+        target.style.background = "#ffb3b3";
+        target.style.borderColor = "#b30000";
+        document.getElementById("sound-wrong").play();
+      }
+    }
+  });
+
+  dragging.remove();
+  dragging = null;
+}
+
+// EVENTS
+document.addEventListener("mousedown", startDrag);
+document.addEventListener("mousemove", moveDrag);
+document.addEventListener("mouseup", endDrag);
+
+document.addEventListener("touchstart", startDrag);
+document.addEventListener("touchmove", moveDrag);
+document.addEventListener("touchend", endDrag);
+
+document.getElementById("resetBtn").addEventListener("click", () => {
+  document.querySelectorAll(".drop-target").forEach(t => {
+    t.style.background = "rgba(255,255,255,0.7)";
+    t.style.borderColor = "#294a9c";
+  });
+});
+</script>
+
 </body>
 </html>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
