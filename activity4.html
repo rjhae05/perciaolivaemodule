@@ -23,7 +23,7 @@
   h2{margin:0 0 10px;font-size:18px}
   p.lead{margin:0 0 12px;color:#234}
 
-  /* Left controls */
+  /* Left controls - HIDDEN ON MOBILE */
   .ingredients{display:flex;flex-direction:column;gap:10px}
   .item{background:#fff;border-radius:10px;padding:12px;display:flex;align-items:center;gap:10px;cursor:grab;border:1px solid rgba(0,0,0,0.06); user-select:none; touch-action:manipulation}
   .item.dragging{opacity:0.6; transform:scale(.98)}
@@ -40,6 +40,71 @@
   .scene{position:relative;height:560px;border-radius:10px;overflow:hidden;background:linear-gradient(180deg,#fff,#f0fbfd);padding:12px}
   .ground{position:absolute;left:50%;transform:translateX(-50%);bottom:14px;width:var(--volcano-width);height:260px;pointer-events:none;display:flex;align-items:flex-end;justify-content:center}
   .mount{position:relative;width:100%;height:240px;display:block;}
+
+  /* MOBILE FLOATING BUTTONS */
+  .mobile-ingredients {
+    display: none;
+    position: absolute;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 100;
+    gap: 15px;
+    background: rgba(255,255,255,0.9);
+    padding: 12px 20px;
+    border-radius: 50px;
+    box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255,255,255,0.3);
+  }
+  
+  .mobile-ingredient-btn {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: 800;
+    font-size: 16px;
+    cursor: pointer;
+    border: none;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    transition: all 0.2s ease;
+  }
+  
+  .mobile-ingredient-btn:active {
+    transform: scale(0.95);
+    box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+  }
+  
+  .mobile-ingredient-btn.silica {
+    background: #6b2b8f;
+  }
+  
+  .mobile-ingredient-btn.water {
+    background: #1d4ed8;
+  }
+  
+  .mobile-ingredient-label {
+    position: absolute;
+    top: 60px;
+    background: rgba(0,0,0,0.8);
+    color: white;
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-size: 12px;
+    white-space: nowrap;
+    opacity: 0;
+    transition: opacity 0.2s;
+    pointer-events: none;
+  }
+  
+  .mobile-ingredient-btn:hover .mobile-ingredient-label,
+  .mobile-ingredient-btn:active .mobile-ingredient-label {
+    opacity: 1;
+  }
 
 /* volcano image */
   #volcanoStatic, #eruptionImg{
@@ -97,10 +162,31 @@
     .wrap{grid-template-columns:1fr}
     .ground{width:var(--volcano-width)}
     .scene{height:480px}
+    
+    /* Hide desktop ingredients, show mobile buttons */
+    .ingredients { display: none; }
+    .mobile-ingredients { display: flex; }
+    
+    /* Adjust left panel layout for mobile */
+    .card:first-child .controls {
+      margin-top: 0;
+    }
   }
+  
   @media (max-width:520px){
     :root{--volcano-width:260px}
     .scene{height:420px}
+    
+    .mobile-ingredients {
+      padding: 10px 16px;
+      gap: 12px;
+    }
+    
+    .mobile-ingredient-btn {
+      width: 45px;
+      height: 45px;
+      font-size: 14px;
+    }
   }
 
  /* ----------------------------------------------------
@@ -141,7 +227,7 @@
   left:50%; top:50%;
   transform:translate(-50%,-50%);
   width:6px;
-  height:6px;
+ height:6px;
   background:white;
   border-radius:50%;
   opacity:0;
@@ -180,33 +266,15 @@
   100% { height:50px; border-radius:60px; filter:blur(0); }
 }
 
-/* Mobile-specific styles */
-@media (hover: none) and (pointer: coarse) {
-  .item {
-    cursor: pointer;
-    min-height: 60px;
-    padding: 14px 12px;
-  }
-  
-  .dot {
-    width: 44px !important;
-    height: 44px !important;
-  }
-  
-  .drop-zone {
-    cursor: pointer;
-    touch-action: manipulation;
-  }
+/* Drop animation feedback */
+@keyframes dropFeedback {
+  0% { transform: translateX(-50%) scale(1); }
+  50% { transform: translateX(-50%) scale(1.1); }
+  100% { transform: translateX(-50%) scale(1); }
 }
 
-/* Floating drag copy for mobile */
-#floatDragCopy {
-  position: fixed !important;
-  z-index: 10000 !important;
-  pointer-events: none !important;
-  box-shadow: 0 10px 30px rgba(0,0,0,0.3) !important;
-  transform: scale(1.05) !important;
-  transition: none !important;
+.drop-feedback {
+  animation: dropFeedback 0.3s ease;
 }
 
 </style>
@@ -214,7 +282,7 @@
 <body>
 
 <div class="wrap">
-  <!-- LEFT: Controls & Drag items -->
+  <!-- LEFT: Controls & Drag items (hidden on mobile) -->
   <div class="card">
     <h2>Viscosity Race</h2>
     <p class="lead">Drag the ingredients to the volcano crater. See how silica (solid) makes magma thicker while water vapor thins it and raises gas flow.</p>
@@ -251,8 +319,8 @@
 
       <div class="footer">
         <div style="margin-top:8px;font-weight:700">Instructions</div>
-        <ol style="margin:6px 0 0 16px">
-          <li>Drag or tap & drag <em>Silica</em> or <em>Water vapor</em> onto the crater.</li>
+        <ol style="margin:6px 0 0 16px" id="instructions">
+          <li>Drag <em>Silica</em> or <em>Water vapor</em> onto the crater.</li>
           <li>Each drop changes viscosity (value at top) and updates visuals.</li>
         </ol>
       </div>
@@ -267,6 +335,18 @@
     </div>
 
     <div style="position:relative;height:430px;background:linear-gradient(180deg,#eaf9fb,#d6f2f6);border-radius:8px;overflow:hidden">
+      <!-- MOBILE FLOATING BUTTONS -->
+      <div class="mobile-ingredients" id="mobileIngredients">
+        <button class="mobile-ingredient-btn silica" data-type="silica" title="Silica">
+          Si
+          <div class="mobile-ingredient-label">Silica</div>
+        </button>
+        <button class="mobile-ingredient-btn water" data-type="water" title="Water Vapor">
+          H₂O
+          <div class="mobile-ingredient-label">Water Vapor</div>
+        </button>
+      </div>
+      
       <div class="ground">
         <div class="mount" id="mount">
         
@@ -320,6 +400,7 @@ let bubbleTimer = null;
 let touchDragging = null;
 let touchStartX = 0;
 let touchStartY = 0;
+let isMobile = false;
 
 const visEl = document.getElementById('visValue');
 const visFill = document.getElementById('visFill');
@@ -336,12 +417,37 @@ const volcanoStatic = document.getElementById('volcanoStatic');
 const eruptionImg = document.getElementById('eruptionImg');
 const mount = document.getElementById('mount');
 const dropZone = document.getElementById('dropZone');
+const mobileIngredients = document.getElementById('mobileIngredients');
+const instructions = document.getElementById('instructions');
 
 /* ============================
    UTILITY FUNCTIONS
    ============================ */
 function clamp(v, a, b){ return Math.max(a, Math.min(b, v)); }
 function mapRange(v, a, b, c, d){ return c + (d-c) * ((v-a)/(b-a)); }
+
+// Check if mobile
+function checkIfMobile() {
+  isMobile = window.innerWidth <= 980;
+  return isMobile;
+}
+
+// Update instructions based on device
+function updateInstructions() {
+  if (isMobile) {
+    instructions.innerHTML = `
+      <li>Tap the <em>Si</em> or <em>H₂O</em> buttons above the volcano.</li>
+      <li>Each tap drops the ingredient into the crater and updates the visuals.</li>
+      <li>Watch how viscosity and gas pressure change!</li>
+    `;
+  } else {
+    instructions.innerHTML = `
+      <li>Drag <em>Silica</em> or <em>Water vapor</em> onto the crater.</li>
+      <li>Each drop changes viscosity (value at top) and updates visuals.</li>
+      <li>You can also press S for Silica or W for Water vapor.</li>
+    `;
+  }
+}
 
 /* ============================
    VISUALS UPDATE
@@ -487,121 +593,80 @@ function spawnLavaBombs(count) {
 }
 
 /* ============================
-   TOUCH DRAG-AND-DROP FOR MOBILE
+   MOBILE BUTTON HANDLERS
    ============================ */
-function setupTouchDrag() {
-  const items = document.querySelectorAll('.item');
+function setupMobileButtons() {
+  const buttons = document.querySelectorAll('.mobile-ingredient-btn');
   
-  items.forEach(item => {
-    // Touch start
-    item.addEventListener('touchstart', function(e) {
-      if (touchDragging) return;
+  buttons.forEach(button => {
+    button.addEventListener('click', function(e) {
+      const type = this.dataset.type;
       
-      e.preventDefault();
-      touchDragging = this;
-      touchStartX = e.touches[0].clientX;
-      touchStartY = e.touches[0].clientY;
+      // Add click feedback
+      this.style.transform = 'scale(0.9)';
+      setTimeout(() => {
+        this.style.transform = '';
+      }, 150);
       
-      // Add visual feedback
-      this.classList.add('dragging');
+      // Show drop zone feedback
+      dropZone.classList.add('drop-feedback');
+      setTimeout(() => {
+        dropZone.classList.remove('drop-feedback');
+      }, 300);
       
-      // Create a floating copy for visual feedback
-      const rect = this.getBoundingClientRect();
-      const floatCopy = this.cloneNode(true);
-      floatCopy.id = 'floatDragCopy';
-      floatCopy.style.position = 'fixed';
-      floatCopy.style.left = (rect.left - 10) + 'px';
-      floatCopy.style.top = (rect.top - 10) + 'px';
-      floatCopy.style.width = rect.width + 'px';
-      floatCopy.style.zIndex = '10000';
-      floatCopy.style.pointerEvents = 'none';
-      floatCopy.style.boxShadow = '0 10px 30px rgba(0,0,0,0.3)';
-      floatCopy.style.transform = 'scale(1.05)';
-      document.body.appendChild(floatCopy);
-    }, { passive: false });
-    
-    // Touch move
-    item.addEventListener('touchmove', function(e) {
-      if (touchDragging !== this) return;
-      e.preventDefault();
+      // Handle the drop
+      handleDrop(type);
       
-      const touch = e.touches[0];
-      const floatCopy = document.getElementById('floatDragCopy');
-      
-      if (floatCopy) {
-        floatCopy.style.left = (touch.clientX - floatCopy.offsetWidth / 2) + 'px';
-        floatCopy.style.top = (touch.clientY - floatCopy.offsetHeight / 2) + 'px';
-      }
-      
-      // Check if over drop zone
+      // Show visual feedback from drop zone to crater
+      const buttonRect = this.getBoundingClientRect();
       const dropRect = dropZone.getBoundingClientRect();
-      const touchX = touch.clientX;
-      const touchY = touch.clientY;
       
-      const isOverDropZone = (
-        touchX >= dropRect.left &&
-        touchX <= dropRect.right &&
-        touchY >= dropRect.top &&
-        touchY <= dropRect.bottom
-      );
+      // Create a flying element animation
+      const flyElement = document.createElement('div');
+      flyElement.style.position = 'fixed';
+      flyElement.style.width = '30px';
+      flyElement.style.height = '30px';
+      flyElement.style.borderRadius = '50%';
+      flyElement.style.zIndex = '10001';
+      flyElement.style.pointerEvents = 'none';
+      flyElement.style.display = 'flex';
+      flyElement.style.alignItems = 'center';
+      flyElement.style.justifyContent = 'center';
+      flyElement.style.color = 'white';
+      flyElement.style.fontWeight = 'bold';
+      flyElement.style.fontSize = '14px';
       
-      if (isOverDropZone) {
-        dropZone.classList.add('over');
+      if (type === 'silica') {
+        flyElement.style.background = '#6b2b8f';
+        flyElement.textContent = 'Si';
       } else {
-        dropZone.classList.remove('over');
-      }
-    }, { passive: false });
-    
-    // Touch end
-    item.addEventListener('touchend', function(e) {
-      if (touchDragging !== this) return;
-      
-      e.preventDefault();
-      
-      // Remove floating copy
-      const floatCopy = document.getElementById('floatDragCopy');
-      if (floatCopy) {
-        document.body.removeChild(floatCopy);
+        flyElement.style.background = '#1d4ed8';
+        flyElement.textContent = 'H₂O';
       }
       
-      // Check if dropped on zone
-      const lastTouch = e.changedTouches[0];
-      const dropRect = dropZone.getBoundingClientRect();
+      flyElement.style.left = (buttonRect.left + buttonRect.width/2 - 15) + 'px';
+      flyElement.style.top = (buttonRect.top + buttonRect.height/2 - 15) + 'px';
+      document.body.appendChild(flyElement);
       
-      const isOverDropZone = (
-        lastTouch.clientX >= dropRect.left &&
-        lastTouch.clientX <= dropRect.right &&
-        lastTouch.clientY >= dropRect.top &&
-        lastTouch.clientY <= dropRect.bottom
-      );
+      // Animate to drop zone
+      flyElement.animate([
+        { 
+          transform: 'translate(0, 0) scale(1)',
+          opacity: 1
+        },
+        { 
+          transform: `translate(${dropRect.left + dropRect.width/2 - (buttonRect.left + buttonRect.width/2)}px, 
+                              ${dropRect.top + dropRect.height/2 - (buttonRect.top + buttonRect.height/2)}px) scale(0.5)`,
+          opacity: 0
+        }
+      ], {
+        duration: 600,
+        easing: 'cubic-bezier(0.2, 0.8, 0.2, 1)'
+      });
       
-      if (isOverDropZone) {
-        const type = this.dataset.type;
-        handleDrop(type);
-        dropZone.classList.remove('over');
-        
-        // Add success feedback
-        dropZone.style.backgroundColor = 'rgba(232, 93, 4, 0.1)';
-        setTimeout(() => {
-          dropZone.style.backgroundColor = '';
-        }, 300);
-      }
-      
-      // Reset
-      this.classList.remove('dragging');
-      dropZone.classList.remove('over');
-      touchDragging = null;
-    }, { passive: false });
-    
-    // Touch cancel
-    item.addEventListener('touchcancel', function() {
-      this.classList.remove('dragging');
-      const floatCopy = document.getElementById('floatDragCopy');
-      if (floatCopy) {
-        document.body.removeChild(floatCopy);
-      }
-      dropZone.classList.remove('over');
-      touchDragging = null;
+      setTimeout(() => {
+        document.body.removeChild(flyElement);
+      }, 600);
     });
   });
 }
@@ -644,13 +709,13 @@ function setupDesktopDrag() {
 /* ============================
    DRAG-AND-DROP INITIALIZATION
    ============================ */
-function initializeDragAndDrop() {
-  // Check if touch is supported
-  if ('ontouchstart' in window || navigator.maxTouchPoints) {
-    // Mobile/touch device
-    setupTouchDrag();
+function initializeControls() {
+  checkIfMobile();
+  updateInstructions();
+  
+  if (isMobile) {
+    setupMobileButtons();
   } else {
-    // Desktop
     setupDesktopDrag();
   }
 }
@@ -733,8 +798,14 @@ function triggerEruption(){
    INITIALIZATION
    ============================ */
 updateVisuals();
-initializeDragAndDrop();
+initializeControls();
 setupBubbles();
+
+// Handle window resize
+window.addEventListener('resize', () => {
+  checkIfMobile();
+  updateInstructions();
+});
 
 // Keyboard testing (for desktop)
 window.addEventListener('keydown', (e) => {
