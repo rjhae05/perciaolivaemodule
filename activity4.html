@@ -25,7 +25,7 @@
 
   /* Left controls */
   .ingredients{display:flex;flex-direction:column;gap:10px}
-  .item{background:#fff;border-radius:10px;padding:12px;display:flex;align-items:center;gap:10px;cursor:grab;border:1px solid rgba(0,0,0,0.06); user-select:none}
+  .item{background:#fff;border-radius:10px;padding:12px;display:flex;align-items:center;gap:10px;cursor:grab;border:1px solid rgba(0,0,0,0.06); user-select:none; touch-action:manipulation}
   .item.dragging{opacity:0.6; transform:scale(.98)}
   .item .dot{width:38px;height:38px;border-radius:8px;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700}
 
@@ -49,9 +49,6 @@
   }
   #eruptionImg{display:none; z-index:30; pointer-events:none}
 
-/* realistic crater overlay & lava */
-
-
 /* lava stem and flow (smoothed) */
   .lava-stem {
   position: absolute;
@@ -60,8 +57,8 @@
   bottom: 40px;
 
   width: 34px;
-  height: 34px;         /* ➜ ADD THIS */
-  border-radius: 50%;   /* ➜ perfect circle */
+  height: 34px;
+  border-radius: 50%;
 
   opacity: 0;
   z-index: 45;
@@ -119,8 +116,7 @@
   background:#c7b5ff;
   border-radius:50%;
   opacity:0;
-  z-index:9999;  /* pinakataas muna */
-  outline:2px solid red; /* DEBUG para makita mo */
+  z-index:9999;
   pointer-events:none;
 }
 
@@ -171,11 +167,9 @@
   100% { transform:translateX(-50%) scale(0); opacity:0; }
 }
 
-
 /* ----------------------------------------------------
    LAVA THICKEN EFFECT (when silica added)
 -----------------------------------------------------*/
-
 .lava-thicken {
   animation:thickenLava .8s ease-out forwards;
 }
@@ -184,6 +178,35 @@
   0%   { height:40px; border-radius:50px 50px 20px 20px; filter:blur(.2px); }
   50%  { height:55px; border-radius:55px; filter:blur(0); }
   100% { height:50px; border-radius:60px; filter:blur(0); }
+}
+
+/* Mobile-specific styles */
+@media (hover: none) and (pointer: coarse) {
+  .item {
+    cursor: pointer;
+    min-height: 60px;
+    padding: 14px 12px;
+  }
+  
+  .dot {
+    width: 44px !important;
+    height: 44px !important;
+  }
+  
+  .drop-zone {
+    cursor: pointer;
+    touch-action: manipulation;
+  }
+}
+
+/* Floating drag copy for mobile */
+#floatDragCopy {
+  position: fixed !important;
+  z-index: 10000 !important;
+  pointer-events: none !important;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.3) !important;
+  transform: scale(1.05) !important;
+  transition: none !important;
 }
 
 </style>
@@ -229,9 +252,8 @@
       <div class="footer">
         <div style="margin-top:8px;font-weight:700">Instructions</div>
         <ol style="margin:6px 0 0 16px">
-          <li>Drag <em>Silica</em> or <em>Water vapor</em> onto the crater.</li>
+          <li>Drag or tap & drag <em>Silica</em> or <em>Water vapor</em> onto the crater.</li>
           <li>Each drop changes viscosity (value at top) and updates visuals.</li>
-        
         </ol>
       </div>
     </div>
@@ -248,10 +270,10 @@
       <div class="ground">
         <div class="mount" id="mount">
         
-          <!-- static volcano image (your uploaded PNG) -->
-          <img id="volcanoStatic" src="/mnt/data/A_digital_illustration_showcases_a_reddish-brown_o.png" alt="volcano static">
+          <!-- static volcano image -->
+          <img id="volcanoStatic" src="https://rjhae05.github.io/perciaolivaemodule/assets/Volcano-open2.png" alt="volcano static">
 
-          <!-- eruption fallback image (we keep it available but we'll animate overlay) -->
+          <!-- eruption fallback image -->
           <img id="eruptionImg" src="/mnt/data/A_digital_illustration_showcases_a_reddish-brown_o.png" alt="eruption fallback">
 
           <!-- crater overlay & dynamic lava -->
@@ -295,12 +317,14 @@ let viscosity = 50;        // 0 (very runny) .. 100 (very thick)
 let gasPressure = 50;      // 0..100
 let eruptedOnce = false;
 let bubbleTimer = null;
+let touchDragging = null;
+let touchStartX = 0;
+let touchStartY = 0;
 
 const visEl = document.getElementById('visValue');
 const visFill = document.getElementById('visFill');
 const gasVal = document.getElementById('gasVal');
 const gasFill = document.getElementById('gasFill');
-
 const lavaStem = document.getElementById('lavaStem');
 const lavaFlow = document.getElementById('lavaFlow');
 const bubblesWrap = document.getElementById('bubbles');
@@ -311,22 +335,17 @@ const smoke = document.getElementById('smoke');
 const volcanoStatic = document.getElementById('volcanoStatic');
 const eruptionImg = document.getElementById('eruptionImg');
 const mount = document.getElementById('mount');
+const dropZone = document.getElementById('dropZone');
 
-/* ensure uploaded PNG is used (developer uploaded the file) */
-const volcanoStaticPath = 'https://rjhae05.github.io/perciaolivaemodule/assets/Volcano-open2.png';
-const eruptionGifPath   = '/mnt/data/A_digital_illustration_showcases_a_reddish-brown_o.png';
-volcanoStatic.src = volcanoStaticPath;
-eruptionImg.src = eruptionGifPath;
+/* ============================
+   UTILITY FUNCTIONS
+   ============================ */
+function clamp(v, a, b){ return Math.max(a, Math.min(b, v)); }
+function mapRange(v, a, b, c, d){ return c + (d-c) * ((v-a)/(b-a)); }
 
-/* ---------------------------
-   UTIL
-   --------------------------- */
-function clamp(v,a,b){ return Math.max(a, Math.min(b, v)); }
-function mapRange(v,a,b,c,d){ return c + (d-c) * ((v-a)/(b-a)); }
-
-/* ---------------------------
-   VISUALS: smoother updates
-   --------------------------- */
+/* ============================
+   VISUALS UPDATE
+   ============================ */
 function updateVisuals(){
   // meters
   visEl.textContent = Math.round(viscosity);
@@ -369,15 +388,14 @@ function updateVisuals(){
   }
 }
 
-/* ---------------------------
-   Smooth animation loop for lava (optional micro movement)
-   --------------------------- */
+/* ============================
+   LAVA ANIMATION LOOP
+   ============================ */
 let lastTime = 0;
 function lavaAnimationLoop(ts){
   const t = ts || performance.now();
   const delta = t - lastTime;
   lastTime = t;
-  // small vertical bob when lava is active (lower viscosity -> more motion)
   const motion = mapRange(viscosity, 0, 100, 6, 1.2);
   const offset = Math.sin(t/300) * motion;
   lavaFlow.style.transform = `translateX(-50%) translateY(${ -Math.abs(offset)/2 }px)`;
@@ -386,13 +404,14 @@ function lavaAnimationLoop(ts){
 }
 requestAnimationFrame(lavaAnimationLoop);
 
-/* ---------------------------
-   Bubbles system (fixed & tuned)
-   --------------------------- */
+/* ============================
+   BUBBLES SYSTEM
+   ============================ */
 function clearBubbles(){
   if(bubbleTimer) { clearInterval(bubbleTimer); bubbleTimer = null; }
   bubblesWrap.innerHTML = '';
 }
+
 function spawnBubble(){
   const el = document.createElement('div');
   el.className = 'bubble';
@@ -409,51 +428,18 @@ function spawnBubble(){
   bubblesWrap.appendChild(el);
   setTimeout(()=>el.remove(), dur + 220);
 }
+
 function setupBubbles(){
   clearBubbles();
-  // base interval depends on gas; viscosity reduces frequency
   const baseInterval = Math.round(mapRange(gasPressure,0,100,900,220));
-  const viscosityFactor = mapRange(viscosity,0,100,1.6,0.45); // high viscosity reduces perTick
+  const viscosityFactor = mapRange(viscosity,0,100,1.6,0.45);
   const perTick = Math.max(1, Math.round(mapRange(gasPressure,0,100,1,5) * (1/viscosityFactor)));
   bubbleTimer = setInterval(()=>{ for(let i=0;i<perTick;i++) spawnBubble(); }, Math.max(70, baseInterval));
 }
 
-/* ---------------------------
-   DRAG & DROP
-   --------------------------- */
-const items = document.querySelectorAll('.item');
-items.forEach(it=>{
-  it.addEventListener('dragstart', e=>{
-    e.dataTransfer.setData('text/plain', it.dataset.type);
-    it.classList.add('dragging');
-  });
-  it.addEventListener('dragend', e=>{ it.classList.remove('dragging'); });
-});
-
-const dropZone = document.getElementById('dropZone');
-dropZone.addEventListener('dragover', e=>{ e.preventDefault(); dropZone.classList.add('over'); });
-dropZone.addEventListener('dragleave', e=>{ dropZone.classList.remove('over'); });
-dropZone.addEventListener('drop', e=>{
-  e.preventDefault(); dropZone.classList.remove('over');
-  const type = e.dataTransfer.getData('text/plain');
-  handleDrop(type);
-});
-
-/* handle drop logic */
-function handleDrop(type){
-  if(type === 'silica'){
-    viscosity = clamp(viscosity + 14, 0, 100);        // thickens
-    gasPressure = clamp(gasPressure - 6, 0, 100);    // locks gas
-  } else if(type === 'water'){
-    viscosity = clamp(viscosity - 16, 0, 100);        // thins
-    gasPressure = clamp(gasPressure + 12, 0, 100);   // increases gas release
-  }
-  updateVisuals();
-  checkEruption();
-}
-
-
-/* spawn ash - small random particles */
+/* ============================
+   PARTICLE EFFECTS
+   ============================ */
 function spawnAshBurst(count){
   for(let i=0;i<count;i++){
     const ash = document.createElement('div');
@@ -463,7 +449,6 @@ function spawnAshBurst(count){
     ash.style.left = `calc(50% + ${x}px)`;
     ash.style.bottom = `${90 + y}px`;
     particleWrap.appendChild(ash);
-    // animate with JS using transforms
     const angle = mapRange(Math.random(),0,1,-1.2,1.2);
     const travel = mapRange(Math.random(),0,1,160,420);
     ash.animate([
@@ -477,7 +462,6 @@ function spawnAshBurst(count){
   }
 }
 
-/* spawn lava bombs */
 function spawnLavaBombs(count) {
   for(let i=0;i<count;i++){
     const b = document.createElement('div');
@@ -502,14 +486,224 @@ function spawnLavaBombs(count) {
   }
 }
 
+/* ============================
+   TOUCH DRAG-AND-DROP FOR MOBILE
+   ============================ */
+function setupTouchDrag() {
+  const items = document.querySelectorAll('.item');
+  
+  items.forEach(item => {
+    // Touch start
+    item.addEventListener('touchstart', function(e) {
+      if (touchDragging) return;
+      
+      e.preventDefault();
+      touchDragging = this;
+      touchStartX = e.touches[0].clientX;
+      touchStartY = e.touches[0].clientY;
+      
+      // Add visual feedback
+      this.classList.add('dragging');
+      
+      // Create a floating copy for visual feedback
+      const rect = this.getBoundingClientRect();
+      const floatCopy = this.cloneNode(true);
+      floatCopy.id = 'floatDragCopy';
+      floatCopy.style.position = 'fixed';
+      floatCopy.style.left = (rect.left - 10) + 'px';
+      floatCopy.style.top = (rect.top - 10) + 'px';
+      floatCopy.style.width = rect.width + 'px';
+      floatCopy.style.zIndex = '10000';
+      floatCopy.style.pointerEvents = 'none';
+      floatCopy.style.boxShadow = '0 10px 30px rgba(0,0,0,0.3)';
+      floatCopy.style.transform = 'scale(1.05)';
+      document.body.appendChild(floatCopy);
+    }, { passive: false });
+    
+    // Touch move
+    item.addEventListener('touchmove', function(e) {
+      if (touchDragging !== this) return;
+      e.preventDefault();
+      
+      const touch = e.touches[0];
+      const floatCopy = document.getElementById('floatDragCopy');
+      
+      if (floatCopy) {
+        floatCopy.style.left = (touch.clientX - floatCopy.offsetWidth / 2) + 'px';
+        floatCopy.style.top = (touch.clientY - floatCopy.offsetHeight / 2) + 'px';
+      }
+      
+      // Check if over drop zone
+      const dropRect = dropZone.getBoundingClientRect();
+      const touchX = touch.clientX;
+      const touchY = touch.clientY;
+      
+      const isOverDropZone = (
+        touchX >= dropRect.left &&
+        touchX <= dropRect.right &&
+        touchY >= dropRect.top &&
+        touchY <= dropRect.bottom
+      );
+      
+      if (isOverDropZone) {
+        dropZone.classList.add('over');
+      } else {
+        dropZone.classList.remove('over');
+      }
+    }, { passive: false });
+    
+    // Touch end
+    item.addEventListener('touchend', function(e) {
+      if (touchDragging !== this) return;
+      
+      e.preventDefault();
+      
+      // Remove floating copy
+      const floatCopy = document.getElementById('floatDragCopy');
+      if (floatCopy) {
+        document.body.removeChild(floatCopy);
+      }
+      
+      // Check if dropped on zone
+      const lastTouch = e.changedTouches[0];
+      const dropRect = dropZone.getBoundingClientRect();
+      
+      const isOverDropZone = (
+        lastTouch.clientX >= dropRect.left &&
+        lastTouch.clientX <= dropRect.right &&
+        lastTouch.clientY >= dropRect.top &&
+        lastTouch.clientY <= dropRect.bottom
+      );
+      
+      if (isOverDropZone) {
+        const type = this.dataset.type;
+        handleDrop(type);
+        dropZone.classList.remove('over');
+        
+        // Add success feedback
+        dropZone.style.backgroundColor = 'rgba(232, 93, 4, 0.1)';
+        setTimeout(() => {
+          dropZone.style.backgroundColor = '';
+        }, 300);
+      }
+      
+      // Reset
+      this.classList.remove('dragging');
+      dropZone.classList.remove('over');
+      touchDragging = null;
+    }, { passive: false });
+    
+    // Touch cancel
+    item.addEventListener('touchcancel', function() {
+      this.classList.remove('dragging');
+      const floatCopy = document.getElementById('floatDragCopy');
+      if (floatCopy) {
+        document.body.removeChild(floatCopy);
+      }
+      dropZone.classList.remove('over');
+      touchDragging = null;
+    });
+  });
+}
 
+/* ============================
+   DESKTOP DRAG-AND-DROP
+   ============================ */
+function setupDesktopDrag() {
+  const items = document.querySelectorAll('.item');
+  
+  items.forEach(it => {
+    it.addEventListener('dragstart', e => {
+      e.dataTransfer.setData('text/plain', it.dataset.type);
+      it.classList.add('dragging');
+    });
+    
+    it.addEventListener('dragend', e => {
+      it.classList.remove('dragging');
+      dropZone.classList.remove('over');
+    });
+  });
+  
+  dropZone.addEventListener('dragover', e => {
+    e.preventDefault();
+    dropZone.classList.add('over');
+  });
+  
+  dropZone.addEventListener('dragleave', e => {
+    dropZone.classList.remove('over');
+  });
+  
+  dropZone.addEventListener('drop', e => {
+    e.preventDefault();
+    dropZone.classList.remove('over');
+    const type = e.dataTransfer.getData('text/plain');
+    handleDrop(type);
+  });
+}
 
-/* show smoke: fade in/out */
+/* ============================
+   DRAG-AND-DROP INITIALIZATION
+   ============================ */
+function initializeDragAndDrop() {
+  // Check if touch is supported
+  if ('ontouchstart' in window || navigator.maxTouchPoints) {
+    // Mobile/touch device
+    setupTouchDrag();
+  } else {
+    // Desktop
+    setupDesktopDrag();
+  }
+}
+
+/* ============================
+   DROP HANDLER
+   ============================ */
+function handleDrop(type){
+  const silicaImpact = document.getElementById('silica-impact');
+  
+  if(type === 'silica'){
+    viscosity = clamp(viscosity + 14, 0, 100);
+    gasPressure = clamp(gasPressure - 6, 0, 100);
+    
+    // Silica impact animation
+    silicaImpact.style.animation = 'none';
+    void silicaImpact.offsetWidth;
+    silicaImpact.style.animation = 'silicaDropImpact .45s ease-out forwards';
+    silicaImpact.classList.add('silica-burst');
+    setTimeout(() => silicaImpact.classList.remove('silica-burst'), 600);
+    
+    // Thicken lava
+    lavaFlow.classList.add('lava-thicken');
+    setTimeout(() => lavaFlow.classList.remove('lava-thicken'), 900);
+    
+  } else if(type === 'water'){
+    viscosity = clamp(viscosity - 16, 0, 100);
+    gasPressure = clamp(gasPressure + 12, 0, 100);
+    
+    // Water effect - extra bubbles
+    for(let i=0; i<6; i++){
+      spawnBubble();
+    }
+  }
+  
+  updateVisuals();
+  checkEruption();
+}
+
+/* ============================
+   ERUPTION FUNCTIONS
+   ============================ */
 function showSmoke(on){
   smokeWrap.style.opacity = on ? '1' : '0';
 }
 
-/* eruption master */
+function checkEruption(){
+  if(viscosity >= 95 && !eruptedOnce){
+    eruptedOnce = true;
+    triggerEruption();
+  }
+}
+
 function triggerEruption(){
   // visual: shake mount
   mount.classList.add('shake');
@@ -531,175 +725,22 @@ function triggerEruption(){
   setTimeout(()=>{
     mount.classList.remove('shake');
     showSmoke(false);
-    // restore reduced lava and crater (let updateVisuals do it)
     updateVisuals();
-    // after a bit remove remaining particles - they auto-remove
   }, 2800);
 }
 
-/* ---------------------------
-   Init
-   --------------------------- */
+/* ============================
+   INITIALIZATION
+   ============================ */
 updateVisuals();
-
-/* keyboard testing */
-window.addEventListener('keydown', (e)=>{
-  if(e.key.toLowerCase() === 's') handleDrop('silica');
-  if(e.key.toLowerCase() === 'w') handleDrop('water');
-});
-
-/* make sure UI starts bubbling */
+initializeDragAndDrop();
 setupBubbles();
 
-if (draggedItem === "silica") {
-    playSilicaEffect();
-}
-
-function playSilicaEffect() {
-  const impact = document.getElementById("silica-impact");
-
-  // reset animation
-  impact.classList.remove("silica-burst");
-  void impact.offsetWidth;
-
-  // show drop
-  impact.style.opacity = "1";
-  impact.style.transform = "translateX(-50%) scale(1)";
-
-  // play landing + dissolve
-  impact.style.animation = "silicaDropImpact .6s ease-out forwards";
-
-  // play flash + particles
-  setTimeout(() => {
-    impact.classList.add("silica-burst");
-  }, 120);
-
-  // thicken lava visually
-  const lavaFlow = document.querySelector(".lava-flow");
-  lavaFlow.classList.add("lava-thicken");
-
-  setTimeout(() => {
-    lavaFlow.classList.remove("lava-thicken");
-  }, 1000);
-}
-
-
-const silicaImpact = document.getElementById("silica-impact");
-
-/* utility clamp */
-function clamp(v, min, max){ return Math.max(min, Math.min(max, v)); }
-
-/* DRAG START */
-items.forEach(it => {
-  it.addEventListener("dragstart", e => {
-    it.classList.add("dragging");
-    e.dataTransfer.setData("type", it.dataset.type);
-  });
-
-  it.addEventListener("dragend", () => {
-    it.classList.remove("dragging");
-  });
+// Keyboard testing (for desktop)
+window.addEventListener('keydown', (e) => {
+  if (e.key.toLowerCase() === 's') handleDrop('silica');
+  if (e.key.toLowerCase() === 'w') handleDrop('water');
 });
-
-/* DROP ZONE EVENTS */
-dropZone.addEventListener("dragover", e => {
-  e.preventDefault();
-  dropZone.classList.add("over");
-});
-
-dropZone.addEventListener("dragleave", () => {
-  dropZone.classList.remove("over");
-});
-
-/* WHEN ITEM IS DROPPED */
-dropZone.addEventListener("drop", e => {
-  e.preventDefault();
-  dropZone.classList.remove("over");
-
-  const type = e.dataTransfer.getData("type");
-
-  if(type === "silica"){
-    applySilica();
-  } else if(type === "water"){
-    applyWater();
-  }
-});
-
-/* ---------------------------
-   EFFECTS FOR SILICA / WATER
----------------------------- */
-
-function applySilica(){
-  viscosity = clamp(viscosity + 15, 0, 100);
-  gasPressure = clamp(gasPressure - 5, 0, 100);
-  updateUI();
-
-  // impact animation
-  silicaImpact.style.animation = "none";
-  silicaImpact.offsetHeight;
-  silicaImpact.style.animation = "silicaDropImpact .45s ease-out forwards";
-
-  silicaImpact.classList.add("silica-burst");
-  setTimeout(()=> silicaImpact.classList.remove("silica-burst"), 600);
-
-  // thicken lava
-  lavaFlow.classList.add("lava-thicken");
-  setTimeout(()=> lavaFlow.classList.remove("lava-thicken"), 900);
-
-  checkEruption();
-}
-
-function applyWater(){
-  viscosity = clamp(viscosity - 10, 0, 100);
-  gasPressure = clamp(gasPressure + 15, 0, 100);
-  updateUI();
-
-  spawnBubbles(6);
-}
-
-/* UI update */
-function updateUI(){
-  visEl.textContent = viscosity;
-  visFill.style.width = viscosity + "%";
-
-  gasFill.style.width = gasPressure + "%";
-
-  if(gasPressure < 40) gasVal.textContent = "Low";
-  else if(gasPressure < 70) gasVal.textContent = "Medium";
-  else gasVal.textContent = "High";
-}
-
-/* bubbles */
-function spawnBubbles(count){
-  for(let i=0;i<count;i++){
-    const b = document.createElement("div");
-    b.className = "bubble";
-    b.style.setProperty("--drift", (Math.random()*40 - 20)+"px");
-    b.style.animationDuration = (1.5 + Math.random()*1.2) + "s";
-    bubblesWrap.appendChild(b);
-    setTimeout(()=> b.remove(), 1800);
-  }
-}
-
-/* check eruption */
-function checkEruption(){
-  if(viscosity >= 95 && !eruptedOnce){
-    eruptedOnce = true;
-    startEruption();
-  }
-}
-
-/* eruption animation */
-function startEruption(){
-  volcanoStatic.classList.add("shake");
-
-  lavaStem.style.opacity = 1;
-  lavaFlow.style.opacity = 1;
-
-  smokeWrap.style.opacity = 1;
-
-  setTimeout(()=> volcanoStatic.classList.remove("shake"), 2000);
-}
 
 </script>
 
