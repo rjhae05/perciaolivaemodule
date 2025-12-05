@@ -207,6 +207,7 @@
       height: auto;
       opacity: 0;
       z-index: 2;
+      pointer-events: none;
       transition: opacity 0.5s ease;
     }
 
@@ -523,7 +524,12 @@
   </main>
 
   <!-- SUCCESS MESSAGE -->
-
+  <div id="successMessage" class="success-message">
+    <h2>Congratulations! 🎉</h2>
+    <p>You've successfully labeled all parts of the volcano!</p>
+    <p>The volcano is now erupting!</p>
+    <p style="margin-top: 15px; font-size: 12px;">Click "Reset Activity" to try again</p>
+  </div>
 
   <script>
     // STATE VARIABLES
@@ -546,11 +552,11 @@
 
     // DEFAULT PLACEHOLDERS
     const defaultPlaceholders = {
-      crater: "Drop crater",
-      vent: "Drop vent",
-      magma: "Drop magma",
-      lava: "Drop lava",
-      ash: "Drop ash"
+      crater: "Drop",
+      vent: "Drop",
+      magma: "Drop",
+      lava: "Drop",
+      ash: "Drop"
     };
 
     // CHECK IF MOBILE
@@ -776,13 +782,15 @@
       volcanoImg.classList.add("volcano-shake");
 
       // Show success message
-      successMessage.style.display = "block";
+      setTimeout(() => {
+        successMessage.style.display = "block";
+      }, 800);
 
-      // Switch to explosion GIF
+      // Switch to explosion GIF after shake
       setTimeout(() => {
         volcanoImg.style.opacity = "0";
         explosionImg.style.opacity = "1";
-      }, 900);
+      }, 800);
     }
 
     // RESET FUNCTION
@@ -837,11 +845,3 @@
   </script>
 </body>
 </html>
-
-
-
-
-
-
-
-
